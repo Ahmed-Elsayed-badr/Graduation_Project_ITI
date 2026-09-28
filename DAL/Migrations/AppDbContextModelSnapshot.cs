@@ -421,7 +421,7 @@ namespace DAL.Migrations
                     b.HasOne("DAL.User", "user")
                         .WithOne("cart")
                         .HasForeignKey("DAL.Cart", "userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("user");
@@ -432,13 +432,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.Cart", "cart")
                         .WithMany("cartIItems")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.Product", "product")
                         .WithMany("cartItems")
                         .HasForeignKey("productId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("cart");
@@ -450,7 +450,8 @@ namespace DAL.Migrations
                 {
                     b.HasOne("DAL.Role", null)
                         .WithMany("roles")
-                        .HasForeignKey("RoleId");
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("DAL.Order", b =>
@@ -458,7 +459,7 @@ namespace DAL.Migrations
                     b.HasOne("DAL.User", "user")
                         .WithMany("order")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("user");
@@ -469,13 +470,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.Order", "order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.Product", "product")
                         .WithMany("orderItems")
                         .HasForeignKey("productId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("order");
@@ -488,19 +489,19 @@ namespace DAL.Migrations
                     b.HasOne("DAL.Role", "Role")
                         .WithMany("Products")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.Category", "category")
                         .WithMany("products")
                         .HasForeignKey("categoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.Seller", "Seller")
                         .WithMany("Products")
                         .HasForeignKey("sellerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Role");
@@ -515,13 +516,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.Product", "Product")
                         .WithMany("reviews")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.User", "user")
                         .WithMany("reviews")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Product");
@@ -534,13 +535,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.NetRole", "netrole")
                         .WithMany("roles")
                         .HasForeignKey("netroleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.User", "user")
                         .WithMany("role")
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("netrole");
@@ -553,7 +554,7 @@ namespace DAL.Migrations
                     b.HasOne("DAL.User", "user")
                         .WithOne("Seller")
                         .HasForeignKey("DAL.Seller", "userId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("user");
                 });
@@ -563,13 +564,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.NetRole", "Role")
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.User", "user")
                         .WithMany()
                         .HasForeignKey("userId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Role");
@@ -582,7 +583,7 @@ namespace DAL.Migrations
                     b.HasOne("DAL.WishList", "WishList")
                         .WithOne("User")
                         .HasForeignKey("DAL.User", "WishListId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("WishList");
@@ -593,13 +594,13 @@ namespace DAL.Migrations
                     b.HasOne("DAL.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("DAL.WishList", "wishList")
                         .WithMany("wishListItems")
                         .HasForeignKey("WishListId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Product");

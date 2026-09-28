@@ -32,6 +32,14 @@ builder.Services.AddHttpClient<GroqClient>(client =>
 });
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddDbContext<AppDbContext>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<DAL.User>, Microsoft.AspNetCore.Identity.PasswordHasher<DAL.User>>();
+
+builder.Services.AddAuthentication("CookieAuth")
+    .AddCookie("CookieAuth", options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/Login";
+    });
 
 var app = builder.Build();
 // ===== بيانات تجريبية (في وضع التطوير فقط) =====
@@ -55,6 +63,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
