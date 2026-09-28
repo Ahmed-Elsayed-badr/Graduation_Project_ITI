@@ -1,0 +1,70 @@
+﻿@model List<Graduation_Project_ITI.Models.ProductListViewModel>
+
+@{
+    ViewData["Title"] = "Products";
+    var categories = ViewBag.Categories as List<DAL.Category>;
+}
+
+<h2>Products</h2>
+
+<form asp-action="Index" method="get" class="row g-2 mb-4">
+    <div class="col-md-4">
+        <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control" placeholder="Search products..." />
+    </div>
+    <div class="col-md-3">
+        <select name="categoryId" class="form-select">
+            <option value="">All Categories</option>
+            @if (categories != null)
+            {
+                foreach (var category in categories)
+                {
+                    var selected = ViewBag.CurrentCategory != null && ViewBag.CurrentCategory.ToString() == category.Id.ToString();
+                    <option value="@category.Id" selected="@selected">@category.Name</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="sortOrder" class="form-select">
+            <option value="" selected="@(ViewBag.CurrentSort == null || ViewBag.CurrentSort == "")">Name</option>
+            <option value="price_asc" selected="@(ViewBag.CurrentSort == "price_asc")">Price: Low to High</option>
+            <option value="price_desc" selected="@(ViewBag.CurrentSort == "price_desc")">Price: High to Low</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Apply</button>
+    </div>
+</form>
+
+<div class="row">
+    @foreach (var product in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <a asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
+                <div class="card h-100">
+                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;" />
+                    <div class="card-body">
+                        <h5 class="card-title">@product.Name</h5>
+                        <p class="card-text text-muted">@product.CategoryName</p>
+                        <p class="card-text"><strong>@product.Price.ToString("C")</strong></p>
+                        <p class="card-text">
+                            @if (product.AvailableQuantity > 0)
+                            {
+                                <span class="text-success">In stock (@product.AvailableQuantity)</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Out of stock</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <p>No products match your search.</p>
+}
