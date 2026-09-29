@@ -1,9 +1,10 @@
-﻿using BLL.Configuration;
+using BLL.Configuration;
 using DAL;
 
 namespace Graduation_Project_ITI.Data
 {
     // بيانات تجريبية للتطوير فقط - بتتضاف مرة واحدة لو جدول المنتجات فاضي
+    // Development-only demo data. Runs only when the Products table is empty.
     public static class DevDataSeeder
     {
         public static void Seed(AppDbContext db)
@@ -12,39 +13,41 @@ namespace Graduation_Project_ITI.Data
                 return; // في منتجات بالفعل، ما تعملش حاجة
 
             // ===== البائع التجريبي (السلسلة المطلوبة قبل أي منتج) =====
-            var wishList = new WishList();
-
-            var user = new User
+            // Re-use an existing seller if there is one, otherwise create a demo seller.
+            var seller = db.Sellers.FirstOrDefault();
+            if (seller == null)
             {
-                Name = "Demo Seller",
-                Email = "seller@demo.com",
-                PasswordHash = "demo-only",
-                Role = "Seller",
-                IsActive = 1,
-                WishList = wishList
-            };
+                var wishList = new WishList();
 
-            var netRole = new NetRole { NormalizedName = "SELLER" };
+                var user = new User
+                {
+                    Name = "Demo Seller",
+                    Email = "seller@demo.com",
+                    PasswordHash = "demo-only",
+                    Role = "Seller",
+                    IsActive = 1,
+                    WishList = wishList
+                };
 
-            var role = new Role
-            {
-                Name = "Seller",
-                user = user,
-                netrole = netRole
-            };
+                // NOTE: Role / NetRole rows are not needed to add products; the auth module will create them.
 
-            var seller = new Seller
-            {
-                ShopName = "Demo Store",
-                user = user,
-                IsApproved = 1,
-                Status = true
-            };
+                seller = new Seller
+                {
+                    ShopName = "Demo Store",
+                    user = user,
+                    IsApproved = 1,
+                    Status = true
+                };
+            }
 
-            // ===== الأقسام =====
-            var electronics = new Category { Name = "Electronics", Comment = "Phones, laptops and accessories" };
-            var fashion = new Category { Name = "Fashion", Comment = "Clothes and shoes" };
-            var home = new Category { Name = "Home & Kitchen", Comment = "Kitchen tools and home items" };
+            // ===== الأقسام (get-or-create لأن اسم القسم Unique) =====
+            Category GetOrCreateCategory(string name, string comment) =>
+                db.Categories.FirstOrDefault(c => c.Name == name)
+                ?? new Category { Name = name, Comment = comment };
+
+            var electronics = GetOrCreateCategory("Electronics", "Phones, laptops and accessories");
+            var fashion = GetOrCreateCategory("Fashion", "Clothes and shoes");
+            var home = GetOrCreateCategory("Home & Kitchen", "Kitchen tools and home items");
 
             // ===== المنتجات =====
             Product NewProduct(string name, string description, decimal price, int quantity, Category category) =>
@@ -55,9 +58,8 @@ namespace Graduation_Project_ITI.Data
                     Price = price,
                     AvailableQuantity = quantity,
                     ImageUrl = "/images/placeholder.png",
-                    category = category,
-                    Seller = seller,
-                    Role = role
+                    Category = category,
+                    Seller = seller
                 };
 
             db.Products.AddRange(

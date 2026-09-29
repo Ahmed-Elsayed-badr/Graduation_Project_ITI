@@ -1,23 +1,32 @@
-using Microsoft.EntityFrameworkCore;
-using System;
-using Graduation_Project_ITI;
 using BLL.Chat;
-using System.Net.Http.Headers;
 using BLL.Configuration;
+using BLL.Services;
+using BLL.Services.Interfaces;
 using Graduation_Project_ITI.Data;
-
-
+using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ===== MVC =====
+builder.Services.AddControllersWithViews(options =>
+{
+    // Non-nullable reference types (e.g. Category.Comment) are not automatically [Required].
+    // Required fields are declared explicitly with [Required] instead.
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+});
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseSqlServer(
-//        builder.Configuration.GetConnectionString("DefaultConnection")
-//    ));
+// ===== Database =====
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not found in appsettings.json.");
 
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+
+// ===== Repositories & Services =====
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 // ===== Groq Chatbot =====
 var groqOptions = builder.Configuration.GetSection("Groq").Get<GroqOptions>() ?? new GroqOptions();
@@ -31,26 +40,28 @@ builder.Services.AddHttpClient<GroqClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(60);
 });
 builder.Services.AddScoped<ChatService>();
-builder.Services.AddDbContext<AppDbContext>();
-builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<DAL.User>, Microsoft.AspNetCore.Identity.PasswordHasher<DAL.User>>();
-
-builder.Services.AddAuthentication("CookieAuth")
-    .AddCookie("CookieAuth", options =>
-    {
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/Login";
-    });
 
 var app = builder.Build();
-// ===== بيانات تجريبية (في وضع التطوير فقط) =====
+
+// ===== Development only: apply migrations + insert demo data (runs once, only if there are no products) =====
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    DevDataSeeder.Seed(db);
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+        DevDataSeeder.Seed(db);
+    }
+    catch (Exception ex)
+    {
+        // The app still starts so the problem (usually the SQL Server connection string) is visible in the log.
+        logger.LogError(ex, "Database migration / seeding failed. Check ConnectionStrings:DefaultConnection in appsettings.json.");
+    }
 }
 
-// Configure the HTTP request pipeline.
+// ===== HTTP request pipeline =====
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -63,7 +74,6 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(

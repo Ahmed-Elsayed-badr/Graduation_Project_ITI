@@ -1,70 +1,103 @@
-﻿@model List<Graduation_Project_ITI.Models.ProductListViewModel>
-
+@model IEnumerable<DAL.Product>
 @{
     ViewData["Title"] = "Products";
-    var categories = ViewBag.Categories as List<DAL.Category>;
+    var placeholder = Url.Content("~/images/placeholder.png");
+    string? searchTerm = ViewBag.SearchTerm;
+    bool? sortAscending = ViewBag.SortAscending;
+    var hasFilters = !string.IsNullOrWhiteSpace(searchTerm) || sortAscending.HasValue || !string.IsNullOrEmpty(Context.Request.Query["categoryId"]);
 }
 
-<h2>Products</h2>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="fw-bold mb-0 page-title"><i class="bi bi-box-seam"></i> Products</h2>
+    <a asp-action="Create" class="btn btn-success shadow-sm">
+        <i class="bi bi-plus-circle"></i> Add New Product
+    </a>
+</div>
 
-<form asp-action="Index" method="get" class="row g-2 mb-4">
-    <div class="col-md-4">
-        <input type="text" name="searchTerm" value="@ViewBag.CurrentSearch" class="form-control" placeholder="Search products..." />
-    </div>
-    <div class="col-md-3">
-        <select name="categoryId" class="form-select">
-            <option value="">All Categories</option>
-            @if (categories != null)
-            {
-                foreach (var category in categories)
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small text-muted mb-1">Search</label>
+                <input type="text" name="searchTerm" value="@searchTerm" class="form-control" placeholder="Search products..." />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Category</label>
+                @Html.DropDownList("categoryId", (SelectList)ViewBag.Categories, "All Categories", new { @class = "form-select" })
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Sort by Price</label>
+                <select name="sortAscending" class="form-select">
+                    <option value="">No Sort</option>
+                    <option value="true" selected="@(sortAscending == true)">Low to High</option>
+                    <option value="false" selected="@(sortAscending == false)">High to Low</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-fill">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                @if (hasFilters)
                 {
-                    var selected = ViewBag.CurrentCategory != null && ViewBag.CurrentCategory.ToString() == category.Id.ToString();
-                    <option value="@category.Id" selected="@selected">@category.Name</option>
+                    <a asp-action="Index" class="btn btn-light border" title="Clear filters"><i class="bi bi-x-lg"></i></a>
                 }
-            }
-        </select>
+            </div>
+        </form>
     </div>
-    <div class="col-md-3">
-        <select name="sortOrder" class="form-select">
-            <option value="" selected="@(ViewBag.CurrentSort == null || ViewBag.CurrentSort == "")">Name</option>
-            <option value="price_asc" selected="@(ViewBag.CurrentSort == "price_asc")">Price: Low to High</option>
-            <option value="price_desc" selected="@(ViewBag.CurrentSort == "price_desc")">Price: High to Low</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Apply</button>
-    </div>
-</form>
-
-<div class="row">
-    @foreach (var product in Model)
-    {
-        <div class="col-md-4 mb-4">
-            <a asp-action="Details" asp-route-id="@product.Id" class="text-decoration-none text-dark">
-                <div class="card h-100">
-                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;" />
-                    <div class="card-body">
-                        <h5 class="card-title">@product.Name</h5>
-                        <p class="card-text text-muted">@product.CategoryName</p>
-                        <p class="card-text"><strong>@product.Price.ToString("C")</strong></p>
-                        <p class="card-text">
-                            @if (product.AvailableQuantity > 0)
-                            {
-                                <span class="text-success">In stock (@product.AvailableQuantity)</span>
-                            }
-                            else
-                            {
-                                <span class="text-danger">Out of stock</span>
-                            }
-                        </p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    }
 </div>
 
 @if (!Model.Any())
 {
-    <p>No products match your search.</p>
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-inbox" style="font-size:2.5rem;"></i>
+        <p class="mt-2">No products found.</p>
+    </div>
 }
+else
+{
+    <p class="text-muted small mb-3">@Model.Count() product(s)</p>
+}
+
+<div class="row g-4">
+    @foreach (var item in Model)
+    {
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card h-100 shadow-sm border-0 product-card">
+                <div class="product-image">
+                    <img src="@item.ImageUrl" alt="@item.Name" loading="lazy"
+                         onerror="this.onerror=null;this.src='@placeholder'" />
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h6 class="fw-bold mb-1 text-truncate" title="@item.Name">@item.Name</h6>
+                    <span class="badge bg-light text-dark border mb-2 align-self-start">@(item.Category?.Name ?? "Uncategorized")</span>
+                    <p class="text-primary fw-bold mb-2">@item.Price.ToString("N2") EGP</p>
+                    <div class="mb-3">
+                        @if (item.AvailableQuantity <= 0)
+                        {
+                            <span class="badge text-bg-danger">Out of stock</span>
+                        }
+                        else if (item.AvailableQuantity <= 5)
+                        {
+                            <span class="badge text-bg-warning">Only @item.AvailableQuantity left</span>
+                        }
+                        else
+                        {
+                            <span class="badge text-bg-success">In stock: @item.AvailableQuantity</span>
+                        }
+                    </div>
+                    <div class="mt-auto d-flex gap-1">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary flex-fill" title="Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning flex-fill" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger flex-fill" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
