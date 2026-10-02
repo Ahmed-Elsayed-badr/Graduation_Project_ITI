@@ -95,7 +95,7 @@ namespace BLL.Chat
                 .Select(p => new
                 {
                     p.Name,
-                    CategoryName = p.category.Name,
+                    CategoryName = p.Category.Name,
                     p.Price,
                     p.AvailableQuantity,
                     p.Description

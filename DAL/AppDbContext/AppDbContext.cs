@@ -1,4 +1,4 @@
-﻿using DAL;
+using DAL;
 //using Graduation_Project_ITI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
@@ -13,9 +13,23 @@ namespace BLL.Configuration;
 public class AppDbContext : DbContext
 {
 
+    public AppDbContext()
+    {
+    }
+
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+
+    // Fallback only: used when the context is created without options (e.g. some design-time tooling).
+    // At runtime the connection string comes from appsettings.json ("ConnectionStrings:DefaultConnection").
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer("Server=.;Database=GraduationProjec_ITI;Trusted_Connection=True;TrustServerCertificate=True");
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer(
+                "Server=DESKTOP-MS535M4\\SQLEXPRESS;Database=GraduationProjec_ITI;Trusted_Connection=True;TrustServerCertificate=True");
+        }
         base.OnConfiguring(optionsBuilder);
     }
 
@@ -24,21 +38,15 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-
-        foreach (var foreignKey in modelBuilder.Model
-                     .GetEntityTypes()
-                     .SelectMany(e => e.GetForeignKeys()))
-        {
-            foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
-        }
     }
+
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<Cart> Carts { get; set; }
     public DbSet<CartIItem> CartIItems { get; set; }
-    public DbSet<Category> Categorys { get; set; }
+    public DbSet<Category> Categories { get; set; }
     public DbSet<NetRole> NetRoles { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }

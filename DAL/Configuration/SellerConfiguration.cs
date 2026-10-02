@@ -10,14 +10,21 @@ namespace DAL.Configuration
 {
     public class SellerConfiguration : IEntityTypeConfiguration<Seller>
     {
-        void IEntityTypeConfiguration<Seller>.Configure(EntityTypeBuilder<Seller> builder)
+        public void Configure(EntityTypeBuilder<Seller> builder)
         {
             builder.HasKey(x => x.Id);
-            builder.Property(x => x.Id)
-              .ValueGeneratedOnAdd();
-            builder.HasOne(x => x.user).WithOne(x => x.Seller).OnDelete(DeleteBehavior.Cascade);
-            builder.HasMany(x => x.Products).WithOne(x => x.Seller).HasForeignKey(x => x.sellerId).OnDelete(DeleteBehavior.Cascade);
 
+            builder.Property(x => x.Id)
+                .ValueGeneratedOnAdd();
+
+            builder.HasOne(x => x.user)
+                .WithOne(x => x.Seller)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(x => x.Products)
+                .WithOne(x => x.Seller)
+                .HasForeignKey(x => x.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

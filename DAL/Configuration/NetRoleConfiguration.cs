@@ -14,7 +14,8 @@ namespace DAL.Configuration
         {
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).ValueGeneratedOnAdd();
-            builder.HasMany(x => x.roles).WithOne(x => x.netrole).HasForeignKey(x => x.netroleId).OnDelete(DeleteBehavior.Cascade);
+            builder.HasMany(x => x.roles).WithOne(x => x.netrole).HasForeignKey(x => x.netroleId).OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

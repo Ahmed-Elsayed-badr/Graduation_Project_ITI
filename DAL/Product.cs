@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,33 +10,32 @@ namespace DAL
 {
     public class Product
     {
-        public Guid Id { get; set; } = new Guid();
-        [MaxLength(50, ErrorMessage = "Name must be less than or equal 50 character")]
-        [MinLength(5, ErrorMessage = "Name must be greater than or equal 3 character")]
-        [Required(ErrorMessage = "Name Is Required")]
+        public Guid Id { get; set; } = Guid.NewGuid();
+        [MaxLength(50, ErrorMessage = "Name must be 50 characters or fewer")]
+        [MinLength(5, ErrorMessage = "Name must be at least 5 characters")]
+        [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; }
-        [MaxLength(500, ErrorMessage = "Description must be less than or equal 50 character")]
-        [MinLength(20, ErrorMessage = "Description must be greater than or equal 3 character")]
-        [Required(ErrorMessage = "Description Is Required")]
+        [MaxLength(500, ErrorMessage = "Description must be 500 characters or fewer")]
+        [MinLength(20, ErrorMessage = "Description must be at least 20 characters")]
+        [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; }
-        [Range(0,1000000000,ErrorMessage ="price must be range from 0 To 1000000000")]
-        [Required(ErrorMessage = "Price Is Required")]
+        [Range(0, 1000000000, ErrorMessage = "Price must be between 0 and 1,000,000,000")]
+        [Required(ErrorMessage = "Price is required")]
         public decimal Price { get; set; }
         public int AvailableQuantity { get; set; }
-        [Required(ErrorMessage = "ImageUrl Is Required")]
+        [Required(ErrorMessage = "Product image is required")]
         public string ImageUrl  { get; set; }
-        [ForeignKey(nameof(Role))]
-        public Guid RoleId { get; set; }
-        public Role Role { get; set; }
-        public ICollection<OrderItem> orderItems { get; set; }
+       
+       
+        public ICollection<OrderItem> OrderItems { get; set; }
         [ForeignKey(nameof(Category))]
-        public Guid categoryId { get; set; }
-        public Category category { get; set; }
+        public Guid CategoryId { get; set; }
+        public Category Category { get; set; }
         [ForeignKey(nameof(Seller))]
-        public Guid sellerId { get; set; }
+        public Guid SellerId { get; set; }
         public Seller Seller { get; set; }
-        public ICollection<CartIItem> cartItems {  get; set; } = new List<CartIItem>();
-        public ICollection<Reviews> reviews { get; set; } = new List<Reviews>();
+        public ICollection<CartIItem> CartItems { get; set; } = new List<CartIItem>();
+        public ICollection<Reviews> Reviews { get; set; } = new List<Reviews>();
 
     }
 }
