@@ -3,6 +3,7 @@ using Graduation_Project_ITI.Models;
 using BLL.Configuration;
 using System;
 using System.Linq;
+using System.Security.Claims;
 
 namespace Graduation_Project_ITI.Controllers
 {
@@ -71,13 +72,37 @@ namespace Graduation_Project_ITI.Controllers
                     CategoryName = p.category.Name,
                     SellerName = p.Seller.user.Name,
                     AverageRating = p.reviews.Any() ? p.reviews.Average(r => r.Rating) : 0,
-                    ReviewsCount = p.reviews.Count()
+                    ReviewsCount = p.reviews.Count(),
+                    Reviews = p.reviews
+                        .OrderByDescending(r => r.CreatedAt)
+                        .Select(r => new ReviewViewModel
+                        {
+                            ReviewerName = r.user.Name,
+                            Rating = r.Rating,
+                            Comment = r.Comment,
+                            CreatedAt = r.CreatedAt
+                        }).ToList()
                 })
                 .FirstOrDefault();
 
             if (product == null)
             {
                 return NotFound();
+            }
+
+            // Determine if the logged-in user can leave a review:
+            // they must have purchased this product and not have reviewed it already
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                bool purchased = _context.OrderItems
+                    .Any(oi => oi.productId == id && oi.order.userId == userId);
+
+                bool alreadyReviewed = _context.Reviews
+                    .Any(r => r.ProductId == id && r.userId == userId);
+
+                product.CanReview = purchased && !alreadyReviewed;
             }
 
             return View(product);

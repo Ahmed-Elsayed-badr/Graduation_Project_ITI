@@ -1,0 +1,36 @@
+﻿@model List<Graduation_Project_ITI.Models.WishlistItemViewModel>
+
+@{
+    ViewData["Title"] = "My Wishlist";
+}
+
+<h2>My Wishlist</h2>
+
+@if (!Model.Any())
+{
+    <p>Your wishlist is empty. <a asp-controller="Products" asp-action="Index">Browse products</a></p>
+}
+else
+{
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="@item.ImageUrl" class="card-img-top" style="height:200px;object-fit:cover;" />
+                    <div class="card-body">
+                        <h5 class="card-title">@item.ProductName</h5>
+                        <p class="card-text"><strong>@item.Price.ToString("C")</strong></p>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.ProductId" class="btn btn-sm btn-outline-primary">View</a>
+                            <form asp-action="RemoveFromWishlist" method="post">
+                                <input type="hidden" name="wishListItemId" value="@item.WishListItemId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

@@ -1,0 +1,52 @@
+﻿@model Graduation_Project_ITI.Models.OrderDetailsViewModel
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<h2>Order Details</h2>
+
+@if (TempData["OrderError"] != null)
+{
+    <div class="alert alert-danger">@TempData["OrderError"]</div>
+}
+
+<p>
+    <strong>Date:</strong> @Model.OrderDate.ToString("dd MMM yyyy, HH:mm") <br />
+    <strong>Status:</strong> @Model.Status <br />
+    <strong>Total:</strong> @Model.TotalAmount.ToString("C")
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Line Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>
+                    <img src="@item.ImageUrl" style="width:50px;height:50px;object-fit:cover;" class="me-2" />
+                    @item.ProductName
+                </td>
+                <td>@item.UnitPrice.ToString("C")</td>
+                <td>@item.Quantity</td>
+                <td>@item.LineTotal.ToString("C")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (Model.Status == "Pending")
+{
+    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Cancel this order?');">
+        <button type="submit" class="btn btn-danger">Cancel Order</button>
+    </form>
+}
+
+<a asp-action="Index" class="btn btn-link mt-2">← Back to My Orders</a>

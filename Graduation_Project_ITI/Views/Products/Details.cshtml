@@ -51,6 +51,59 @@
             <button class="btn btn-primary" disabled>Add to Cart</button>
         }
 
+        <form asp-controller="Wishlist" asp-action="AddToWishlist" method="post" class="mt-2">
+            <input type="hidden" name="productId" value="@Model.Id" />
+            <button type="submit" class="btn btn-outline-secondary">♡ Add to Wishlist</button>
+        </form>
+
         <a asp-action="Index" class="btn btn-link mt-2">← Back to Products</a>
     </div>
 </div>
+
+<hr class="my-4" />
+
+<h4>Reviews (@Model.ReviewsCount)</h4>
+
+@if (TempData["ReviewError"] != null)
+{
+    <div class="alert alert-danger">@TempData["ReviewError"]</div>
+}
+
+@if (Model.CanReview)
+{
+    <form asp-controller="Reviews" asp-action="Add" method="post" class="mb-4 border p-3 rounded">
+        <input type="hidden" name="productId" value="@Model.Id" />
+        <div class="mb-2">
+            <label>Rating</label>
+            <select name="rating" class="form-select" style="width:120px;">
+                <option value="5">5 - Excellent</option>
+                <option value="4">4 - Good</option>
+                <option value="3">3 - Okay</option>
+                <option value="2">2 - Poor</option>
+                <option value="1">1 - Bad</option>
+            </select>
+        </div>
+        <div class="mb-2">
+            <label>Comment</label>
+            <textarea name="comment" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+    </form>
+}
+
+@if (!Model.Reviews.Any())
+{
+    <p class="text-muted">No reviews yet.</p>
+}
+else
+{
+    foreach (var review in Model.Reviews)
+    {
+        <div class="border-bottom py-2">
+            <strong>@review.ReviewerName</strong>
+            <span class="text-warning">@(new string('★', review.Rating))@(new string('☆', 5 - review.Rating))</span>
+            <p class="mb-0">@review.Comment</p>
+            <small class="text-muted">@review.CreatedAt.ToString("dd MMM yyyy")</small>
+        </div>
+    }
+}
