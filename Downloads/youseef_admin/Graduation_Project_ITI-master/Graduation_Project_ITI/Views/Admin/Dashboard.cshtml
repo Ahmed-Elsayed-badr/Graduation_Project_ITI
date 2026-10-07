@@ -1,0 +1,54 @@
+﻿@model Graduation_Project_ITI.Models.Admin.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Customers</h6>
+                <p class="display-6 mb-0">@Model.TotalCustomers</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Sellers</h6>
+                <p class="display-6 mb-0">@Model.TotalSellers</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Products</h6>
+                <p class="display-6 mb-0">@Model.TotalProducts</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Total Orders</h6>
+                <p class="display-6 mb-0">@Model.TotalOrders</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card text-center h-100 border-warning">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Pending Orders</h6>
+                <p class="display-6 mb-0 text-warning">@Model.PendingOrders</p>
+            </div>
+        </div>
+    </div>
+</div>

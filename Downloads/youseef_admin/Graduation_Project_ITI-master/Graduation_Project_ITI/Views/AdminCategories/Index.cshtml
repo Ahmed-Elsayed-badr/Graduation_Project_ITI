@@ -1,0 +1,69 @@
+﻿@model List<Graduation_Project_ITI.Models.Admin.AdminCategoryViewModel>
+
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Categories</h2>
+    <a asp-action="Create" class="btn btn-primary">Add Category</a>
+</div>
+
+@if (TempData["AdminSuccess"] != null)
+{
+    <div class="alert alert-success">@TempData["AdminSuccess"]</div>
+}
+@if (TempData["AdminError"] != null)
+{
+    <div class="alert alert-danger">@TempData["AdminError"]</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No categories found.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Products</th>
+                    <th>Created</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in Model)
+                {
+                    <tr>
+                        <td>@category.Name</td>
+                        <td>@(string.IsNullOrWhiteSpace(category.Comment) ? "-" : category.Comment)</td>
+                        <td>@category.ProductsCount</td>
+                        <td>@category.CreatedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@category.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+
+                            @if (category.CanBeDeleted)
+                            {
+                                <form asp-action="Delete" asp-route-id="@category.Id" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this category?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled
+                                        title="This category has products and cannot be deleted.">
+                                    Delete
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
