@@ -1,0 +1,2175 @@
+﻿@model IEnumerable<DAL.Product>
+
+@{
+    Layout = "~/Views/Shared/_SellerLayout.cshtml";
+ViewData["Title"] = "Products";
+
+
+var placeholder = Url.Content("~/images/placeholder.png");
+
+var searchTerm = ViewBag.SearchTerm as string;
+var sortAscending = ViewBag.SortAscending as bool?;
+
+var products = Model?.ToList() ?? new List<DAL.Product>();
+
+var totalProducts = products.Count;
+var inStock = products.Count(p => p.AvailableQuantity > 5);
+var lowStock = products.Count(p => p.AvailableQuantity > 0 && p.AvailableQuantity <= 5);
+var outOfStock = products.Count(p => p.AvailableQuantity <= 0);
+
+var hasFilters =
+    !string.IsNullOrWhiteSpace(searchTerm) ||
+    sortAscending.HasValue ||
+    Context.Request.Query.ContainsKey("categoryId");
+
+}
+
+<style>
+
+    /* =========================================================
+       FULL SCREEN RESET
+    ========================================================= */
+
+    html,
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 100% !important;
+    }
+
+    body {
+        background: #f6f8fb;
+        overflow-x: hidden;
+    }
+
+    /*
+        Important:
+        Use 100% instead of 100vw.
+        100vw can create horizontal scrolling because
+        it includes the browser scrollbar width.
+    */
+
+    .seller-page {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        background: #f6f8fb;
+        color: #172033;
+        box-sizing: border-box;
+    }
+
+    .seller-wrapper {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+
+    /* =========================================================
+       SIDEBAR
+    ========================================================= */
+
+    .seller-sidebar {
+        flex: 0 0 260px;
+        width: 260px;
+        min-width: 260px;
+        min-height: 100vh;
+
+        background: #111827;
+        color: #fff;
+
+        padding: 24px 16px;
+
+        box-sizing: border-box;
+
+        position: relative;
+
+        z-index: 1000;
+
+        transition:
+            transform .3s ease,
+            left .3s ease;
+
+        box-shadow:
+            4px 0 20px rgba(0, 0, 0, .06);
+    }
+
+
+    .sidebar-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        padding: 0 10px 28px;
+
+        border-bottom:
+            1px solid rgba(255, 255, 255, .08);
+
+        margin-bottom: 24px;
+    }
+
+
+    .brand-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-shrink: 0;
+
+        border-radius: 12px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #6366f1,
+                #8b5cf6
+            );
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 20px;
+    }
+
+
+    .brand-text {
+        min-width: 0;
+    }
+
+
+    .brand-text strong {
+        display: block;
+
+        font-size: 16px;
+
+        font-weight: 700;
+
+        white-space: nowrap;
+    }
+
+
+    .brand-text span {
+        display: block;
+
+        color: #9ca3af;
+
+        font-size: 12px;
+
+        white-space: nowrap;
+    }
+
+
+    .sidebar-section {
+        color: #6b7280;
+
+        text-transform: uppercase;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        letter-spacing: 1px;
+
+        padding: 0 12px;
+
+        margin: 22px 0 10px;
+    }
+
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+
+        gap: 12px;
+
+        width: 100%;
+
+        padding: 12px 14px;
+
+        margin-bottom: 5px;
+
+        color: #9ca3af;
+
+        text-decoration: none;
+
+        border-radius: 10px;
+
+        transition:
+            background .2s ease,
+            color .2s ease,
+            transform .2s ease;
+
+        font-size: 14px;
+
+        font-weight: 500;
+
+        box-sizing: border-box;
+    }
+
+
+    .sidebar-link i {
+        width: 22px;
+
+        flex-shrink: 0;
+
+        font-size: 18px;
+
+        text-align: center;
+    }
+
+
+    .sidebar-link:hover {
+        color: #fff;
+
+        background:
+            rgba(255, 255, 255, .06);
+
+        transform: translateX(2px);
+    }
+
+
+    .sidebar-link.active {
+        color: #fff;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(99, 102, 241, .95),
+                rgba(124, 58, 237, .95)
+            );
+
+        box-shadow:
+            0 8px 20px rgba(99, 102, 241, .25);
+    }
+
+
+    /* =========================================================
+       MAIN CONTENT
+    ========================================================= */
+
+    .seller-content {
+        flex: 1 1 auto;
+
+        width: auto;
+
+        min-width: 0;
+
+        min-height: 100vh;
+
+        padding: 32px;
+
+        box-sizing: border-box;
+    }
+
+
+    /*
+        Inner wrapper makes the content readable on
+        ultra-wide monitors without breaking full screen.
+    */
+
+    .seller-content-inner {
+        width: 100%;
+        max-width: 1900px;
+        margin: 0 auto;
+    }
+
+
+    /* =========================================================
+       TOP HEADER
+    ========================================================= */
+
+    .page-top {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 20px;
+
+        margin-bottom: 28px;
+    }
+
+
+    .page-heading {
+        display: flex;
+
+        align-items: center;
+
+        gap: 14px;
+
+        min-width: 0;
+    }
+
+
+    .page-heading > div:last-child {
+        min-width: 0;
+    }
+
+
+    .page-heading h1 {
+        margin: 0;
+
+        color: #111827;
+
+        font-size: 30px;
+
+        line-height: 1.2;
+
+        font-weight: 800;
+
+        letter-spacing: -.6px;
+    }
+
+
+    .page-heading p {
+        margin: 6px 0 0;
+
+        color: #6b7280;
+
+        font-size: 14px;
+    }
+
+
+    .mobile-menu-btn {
+        display: none;
+
+        width: 42px;
+        height: 42px;
+
+        padding: 0;
+
+        border: 0;
+
+        border-radius: 10px;
+
+        background: #fff;
+
+        color: #111827;
+
+        box-shadow:
+            0 4px 15px rgba(0, 0, 0, .06);
+
+        font-size: 20px;
+
+        align-items: center;
+        justify-content: center;
+    }
+
+
+    .add-product-btn {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 8px;
+
+        min-height: 44px;
+
+        padding: 11px 18px;
+
+        border-radius: 10px;
+
+        color: #fff;
+
+        background:
+            linear-gradient(
+                135deg,
+                #6366f1,
+                #7c3aed
+            );
+
+        text-decoration: none;
+
+        font-size: 14px;
+
+        font-weight: 600;
+
+        white-space: nowrap;
+
+        box-shadow:
+            0 8px 18px rgba(99, 102, 241, .2);
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .add-product-btn:hover {
+        color: #fff;
+
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 12px 25px rgba(99, 102, 241, .28);
+    }
+
+
+    /* =========================================================
+       STATISTICS
+    ========================================================= */
+
+    .stats-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 18px;
+
+        margin-bottom: 25px;
+    }
+
+
+    .stat-card {
+        min-width: 0;
+
+        background: #fff;
+
+        border: 1px solid #edf0f5;
+
+        border-radius: 16px;
+
+        padding: 20px;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 15px;
+
+        box-shadow:
+            0 5px 20px rgba(17, 24, 39, .035);
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+
+        box-shadow:
+            0 10px 30px rgba(17, 24, 39, .07);
+    }
+
+
+    .stat-info {
+        min-width: 0;
+    }
+
+
+    .stat-info span {
+        display: block;
+
+        color: #6b7280;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        margin-bottom: 7px;
+    }
+
+
+    .stat-info strong {
+        display: block;
+
+        color: #111827;
+
+        font-size: 25px;
+
+        line-height: 1;
+
+        font-weight: 800;
+    }
+
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+
+        flex: 0 0 46px;
+
+        border-radius: 13px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 20px;
+    }
+
+
+    .stat-purple {
+        background: #eef2ff;
+        color: #6366f1;
+    }
+
+
+    .stat-green {
+        background: #ecfdf5;
+        color: #10b981;
+    }
+
+
+    .stat-orange {
+        background: #fff7ed;
+        color: #f97316;
+    }
+
+
+    .stat-red {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+
+
+    /* =========================================================
+       FILTER AREA
+    ========================================================= */
+
+    .filter-box {
+        background: #fff;
+
+        border: 1px solid #edf0f5;
+
+        border-radius: 16px;
+
+        padding: 20px;
+
+        margin-bottom: 25px;
+
+        box-shadow:
+            0 5px 20px rgba(17, 24, 39, .035);
+    }
+
+
+    .filter-title {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        color: #111827;
+
+        font-size: 14px;
+
+        font-weight: 700;
+
+        margin-bottom: 15px;
+    }
+
+
+    .filter-grid {
+        display: grid;
+
+        grid-template-columns:
+            minmax(240px, 1.6fr)
+            minmax(180px, 1fr)
+            minmax(180px, 1fr)
+            auto;
+
+        gap: 12px;
+
+        align-items: end;
+    }
+
+
+    .filter-label {
+        display: block;
+
+        color: #6b7280;
+
+        font-size: 12px;
+
+        font-weight: 600;
+
+        margin-bottom: 7px;
+    }
+
+
+    .filter-input,
+    .filter-select {
+        width: 100%;
+
+        height: 44px;
+
+        padding: 0 13px;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 9px;
+
+        background: #fff;
+
+        color: #111827;
+
+        font-size: 13px;
+
+        box-sizing: border-box;
+
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease;
+    }
+
+
+    .filter-input:focus,
+    .filter-select:focus {
+        outline: none;
+
+        border-color: #6366f1;
+
+        box-shadow:
+            0 0 0 3px rgba(99, 102, 241, .08);
+    }
+
+
+    .search-wrapper {
+        position: relative;
+
+        width: 100%;
+    }
+
+
+    .search-wrapper i {
+        position: absolute;
+
+        left: 13px;
+
+        top: 50%;
+
+        transform: translateY(-50%);
+
+        color: #9ca3af;
+
+        pointer-events: none;
+    }
+
+
+    .search-wrapper input {
+        padding-left: 38px;
+    }
+
+
+    .filter-actions {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+    }
+
+
+    .filter-btn {
+        height: 44px;
+
+        border: 0;
+
+        padding: 0 18px;
+
+        border-radius: 9px;
+
+        background: #111827;
+
+        color: #fff;
+
+        font-size: 13px;
+
+        font-weight: 600;
+
+        white-space: nowrap;
+
+        cursor: pointer;
+
+        transition:
+            background .2s ease,
+            transform .2s ease;
+    }
+
+
+    .filter-btn:hover {
+        background: #1f2937;
+
+        transform: translateY(-1px);
+    }
+
+
+    .clear-btn {
+        width: 44px;
+        height: 44px;
+
+        flex: 0 0 44px;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 9px;
+
+        background: #fff;
+
+        color: #6b7280;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        text-decoration: none;
+
+        transition:
+            background .2s ease,
+            color .2s ease,
+            border-color .2s ease;
+    }
+
+
+    .clear-btn:hover {
+        background: #fef2f2;
+
+        color: #ef4444;
+
+        border-color: #fecaca;
+    }
+
+
+    /* =========================================================
+       PRODUCTS HEADER
+    ========================================================= */
+
+    .products-header {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        margin-bottom: 16px;
+    }
+
+
+    .products-header h3 {
+        color: #111827;
+
+        font-size: 17px;
+
+        font-weight: 800;
+
+        margin: 0;
+    }
+
+
+    .products-header span {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #6b7280;
+
+        font-size: 13px;
+    }
+
+
+    /* =========================================================
+       PRODUCT GRID
+    ========================================================= */
+
+    .products-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 20px;
+    }
+
+
+    .product-card {
+        min-width: 0;
+
+        background: #fff;
+
+        border:
+            1px solid #edf0f5;
+
+        border-radius: 16px;
+
+        overflow: hidden;
+
+        box-shadow:
+            0 5px 20px rgba(17, 24, 39, .035);
+
+        transition:
+            transform .25s ease,
+            box-shadow .25s ease,
+            border-color .25s ease;
+    }
+
+
+    .product-card:hover {
+        transform: translateY(-5px);
+
+        box-shadow:
+            0 16px 35px rgba(17, 24, 39, .09);
+
+        border-color: #e5e7eb;
+    }
+
+
+    /* =========================================================
+       PRODUCT IMAGE
+    ========================================================= */
+
+    .product-image {
+        position: relative;
+
+        width: 100%;
+
+        aspect-ratio: 1 / .82;
+
+        min-height: 190px;
+
+        max-height: 270px;
+
+        background: #f8fafc;
+
+        overflow: hidden;
+    }
+
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+
+        display: block;
+
+        object-fit: cover;
+
+        transition:
+            transform .35s ease;
+    }
+
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+
+    .stock-badge {
+        position: absolute;
+
+        top: 12px;
+        left: 12px;
+
+        padding: 5px 9px;
+
+        border-radius: 7px;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        color: #fff;
+
+        backdrop-filter: blur(8px);
+
+        box-shadow:
+            0 3px 10px rgba(0, 0, 0, .08);
+    }
+
+
+    .stock-good {
+        background:
+            rgba(16, 185, 129, .92);
+    }
+
+
+    .stock-low {
+        background:
+            rgba(245, 158, 11, .92);
+    }
+
+
+    .stock-empty {
+        background:
+            rgba(239, 68, 68, .92);
+    }
+
+
+    /* =========================================================
+       PRODUCT BODY
+    ========================================================= */
+
+    .product-body {
+        padding: 16px;
+    }
+
+
+    .product-category {
+        color: #6366f1;
+
+        font-size: 11px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: .5px;
+
+        margin-bottom: 7px;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+
+    .product-name {
+        min-width: 0;
+
+        color: #111827;
+
+        font-size: 15px;
+
+        font-weight: 700;
+
+        line-height: 1.4;
+
+        margin: 0 0 12px;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+    }
+
+
+    .product-meta {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 10px;
+
+        margin-bottom: 15px;
+    }
+
+
+    .product-price {
+        min-width: 0;
+
+        color: #111827;
+
+        font-size: 18px;
+
+        font-weight: 800;
+
+        white-space: nowrap;
+    }
+
+
+    .product-stock {
+        color: #6b7280;
+
+        font-size: 11px;
+
+        white-space: nowrap;
+    }
+
+
+    /* =========================================================
+       PRODUCT ACTIONS
+    ========================================================= */
+
+    .product-actions {
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 7px;
+
+        border-top:
+            1px solid #f1f3f6;
+
+        padding-top: 13px;
+    }
+
+
+    .product-action {
+        height: 34px;
+
+        border:
+            1px solid #e5e7eb;
+
+        border-radius: 8px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        text-decoration: none;
+
+        color: #4b5563;
+
+        background: #fff;
+
+        font-size: 12px;
+
+        transition:
+            background .2s ease,
+            color .2s ease,
+            border-color .2s ease;
+    }
+
+
+    .product-action:hover {
+        background: #f9fafb;
+
+        color: #111827;
+    }
+
+
+    .product-action.edit:hover {
+        color: #6366f1;
+
+        border-color: #c7d2fe;
+
+        background: #eef2ff;
+    }
+
+
+    .product-action.delete:hover {
+        color: #ef4444;
+
+        border-color: #fecaca;
+
+        background: #fef2f2;
+    }
+
+
+    /* =========================================================
+       EMPTY STATE
+    ========================================================= */
+
+    .empty-state {
+        background: #fff;
+
+        border:
+            1px dashed #d9dee7;
+
+        border-radius: 18px;
+
+        padding: 80px 20px;
+
+        text-align: center;
+    }
+
+
+    .empty-icon {
+        width: 70px;
+        height: 70px;
+
+        margin: 0 auto 18px;
+
+        border-radius: 20px;
+
+        background: #eef2ff;
+
+        color: #6366f1;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 30px;
+    }
+
+
+    .empty-state h4 {
+        color: #111827;
+
+        font-weight: 800;
+
+        margin-bottom: 8px;
+    }
+
+
+    .empty-state p {
+        color: #6b7280;
+
+        font-size: 14px;
+
+        margin-bottom: 20px;
+    }
+
+
+    /* =========================================================
+       OVERLAY
+    ========================================================= */
+
+    .sidebar-overlay {
+        display: none;
+
+        position: fixed;
+
+        inset: 0;
+
+        background:
+            rgba(15, 23, 42, .45);
+
+        z-index: 999;
+    }
+
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+
+    /* =========================================================
+       LARGE SCREENS
+    ========================================================= */
+
+    @@media (min-width: 1600px) {
+
+        .seller-content {
+            padding: 36px 42px;
+        }
+
+
+        .products-grid {
+            grid-template-columns:
+                repeat(5, minmax(0, 1fr));
+
+            gap: 22px;
+        }
+
+    }
+
+
+    /* =========================================================
+       1300px
+    ========================================================= */
+
+    @@media (max-width: 1300px) {
+
+        .seller-content {
+            padding: 28px;
+        }
+
+
+        .products-grid {
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
+
+            gap: 16px;
+        }
+
+
+        .product-body {
+            padding: 14px;
+        }
+
+
+        .product-price {
+            font-size: 16px;
+        }
+
+    }
+
+
+    /* =========================================================
+       1150px
+    ========================================================= */
+
+    @@media (max-width: 1150px) {
+
+        .products-grid {
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+        }
+
+
+        .stats-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+
+        .filter-grid {
+            grid-template-columns:
+                1fr 1fr;
+        }
+
+
+        .filter-actions {
+            grid-column: 1 / -1;
+        }
+
+    }
+
+
+    /* =========================================================
+       900px
+    ========================================================= */
+
+    @@media (max-width: 900px) {
+
+        .seller-sidebar {
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 260px;
+            min-width: 260px;
+
+            transform: translateX(-100%);
+
+            z-index: 1000;
+        }
+
+
+        .seller-sidebar.open {
+            transform: translateX(0);
+        }
+
+
+        .mobile-menu-btn {
+            display: flex;
+        }
+
+
+        .seller-content {
+            width: 100%;
+
+            padding: 22px;
+        }
+
+
+        .products-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
+
+    /* =========================================================
+       650px
+    ========================================================= */
+
+    @@media (max-width: 650px) {
+
+        .seller-content {
+            padding: 16px;
+        }
+
+
+        .page-top {
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+
+        .page-heading {
+            gap: 10px;
+        }
+
+
+        .page-heading h1 {
+            font-size: 23px;
+        }
+
+
+        .page-heading p {
+            display: none;
+        }
+
+
+        .add-product-btn span {
+            display: none;
+        }
+
+
+        .add-product-btn {
+            width: 42px;
+            min-height: 42px;
+
+            height: 42px;
+
+            padding: 0;
+        }
+
+
+        .stats-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 10px;
+        }
+
+
+        .stat-card {
+            padding: 15px;
+
+            gap: 8px;
+        }
+
+
+        .stat-info span {
+            font-size: 11px;
+        }
+
+
+        .stat-info strong {
+            font-size: 20px;
+        }
+
+
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+
+            flex: 0 0 38px;
+
+            font-size: 17px;
+        }
+
+
+        .filter-box {
+            padding: 16px;
+        }
+
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .filter-actions {
+            grid-column: auto;
+
+            width: 100%;
+        }
+
+
+        .filter-btn {
+            flex: 1;
+        }
+
+
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .product-image {
+            aspect-ratio: 1 / .75;
+
+            min-height: 220px;
+        }
+
+    }
+
+
+    /* =========================================================
+       400px
+    ========================================================= */
+
+    @@media (max-width: 400px) {
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+
+        .page-heading h1 {
+            font-size: 20px;
+        }
+
+
+        .page-heading {
+            gap: 8px;
+        }
+
+
+        .product-image {
+            min-height: 200px;
+        }
+
+    }
+
+</style>
+
+<div class="seller-page">
+
+```
+<div class="seller-wrapper">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="seller-sidebar"
+           id="sellerSidebar">
+
+
+        <div class="sidebar-brand">
+
+            <div class="brand-icon">
+
+                <i class="bi bi-shop"></i>
+
+            </div>
+
+
+            <div class="brand-text">
+
+                <strong>
+                    Seller Center
+                </strong>
+
+                <span>
+                    Manage your store
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="sidebar-section">
+            Main
+        </div>
+
+
+        <a asp-controller="Products"
+           asp-action="Index"
+           class="sidebar-link active">
+
+            <i class="bi bi-grid"></i>
+
+            <span>
+                Products
+            </span>
+
+        </a>
+
+
+        <a asp-controller="Products"
+           asp-action="Orders"
+           class="sidebar-link">
+
+            <i class="bi bi-bag"></i>
+
+            <span>
+                Orders
+            </span>
+
+        </a>
+
+
+        <div class="sidebar-section">
+            Management
+        </div>
+
+
+        <a asp-controller="Categories"
+           asp-action="Index"
+           class="sidebar-link">
+
+            <i class="bi bi-tags"></i>
+
+            <span>
+                Categories
+            </span>
+
+        </a>
+
+
+      <a asp-action="Analysis"
+   class="sidebar-link">
+
+    <i class="bi bi-bar-chart"></i>
+
+    <span>
+        Analytics
+    </span>
+
+</a>
+
+
+<a 
+   asp-action="Settings"
+   class="sidebar-link">
+
+    <i class="bi bi-bar-chart"></i>
+    <span>Settings</span>
+
+</a>
+
+    </aside>
+
+
+    <!-- MOBILE OVERLAY -->
+
+    <div class="sidebar-overlay"
+         id="sidebarOverlay">
+    </div>
+
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="seller-content">
+
+        <div class="seller-content-inner">
+
+
+            <!-- =================================================
+                 PAGE HEADER
+            ================================================== -->
+
+            <div class="page-top">
+
+
+                <div class="page-heading">
+
+
+                    <button type="button"
+                            class="mobile-menu-btn"
+                            id="menuButton"
+                            aria-label="Open menu">
+
+                        <i class="bi bi-list"></i>
+
+                    </button>
+
+
+                    <div>
+
+                        <h1>
+                            Products
+                        </h1>
+
+                        <p>
+                            Manage your products, inventory and pricing
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <a asp-controller="Products"
+                   asp-action="Create"
+                   class="add-product-btn">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                    <span>
+                        Add Product
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
+
+            <div class="stats-grid">
+
+
+                <div class="stat-card">
+
+                    <div class="stat-info">
+
+                        <span>
+                            Total Products
+                        </span>
+
+                        <strong>
+                            @totalProducts
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-icon stat-purple">
+
+                        <i class="bi bi-box-seam"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-info">
+
+                        <span>
+                            In Stock
+                        </span>
+
+                        <strong>
+                            @inStock
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-icon stat-green">
+
+                        <i class="bi bi-check-circle"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-info">
+
+                        <span>
+                            Low Stock
+                        </span>
+
+                        <strong>
+                            @lowStock
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-icon stat-orange">
+
+                        <i class="bi bi-exclamation-triangle"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-info">
+
+                        <span>
+                            Out of Stock
+                        </span>
+
+                        <strong>
+                            @outOfStock
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-icon stat-red">
+
+                        <i class="bi bi-x-circle"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FILTERS
+            ================================================== -->
+
+            <div class="filter-box">
+
+
+                <div class="filter-title">
+
+                    <i class="bi bi-sliders"></i>
+
+                    Filters
+
+                </div>
+
+
+                <form asp-action="Index"
+                      method="get">
+
+                    <div class="filter-grid">
+
+
+                        <!-- SEARCH -->
+
+                        <div>
+
+                            <label class="filter-label">
+                                Search
+                            </label>
+
+
+                            <div class="search-wrapper">
+
+                                <i class="bi bi-search"></i>
+
+
+                                <input type="text"
+                                       name="searchTerm"
+                                       value="@searchTerm"
+                                       class="filter-input"
+                                       placeholder="Search products..." />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CATEGORY -->
+
+                        <div>
+
+                            <label class="filter-label">
+                                Category
+                            </label>
+
+
+                            <select name="categoryId"
+                                    asp-items="@(ViewBag.Categories as SelectList)"
+                                    class="filter-select">
+
+                                <option value="">
+                                    All Categories
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- SORT -->
+
+                        <div>
+
+                            <label class="filter-label">
+                                Sort by Price
+                            </label>
+
+
+                            <select name="sortAscending"
+                                    class="filter-select">
+
+                                <option value="">
+                                    Default
+                                </option>
+
+
+                                <option value="true"
+                                        selected="@(sortAscending == true)">
+
+                                    Low → High
+
+                                </option>
+
+
+                                <option value="false"
+                                        selected="@(sortAscending == false)">
+
+                                    High → Low
+
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- ACTIONS -->
+
+                        <div class="filter-actions">
+
+                            <button type="submit"
+                                    class="filter-btn">
+
+                                <i class="bi bi-search"></i>
+
+                                Apply
+
+                            </button>
+
+
+                            @if (hasFilters)
+                            {
+
+                                <a asp-action="Index"
+                                   class="clear-btn"
+                                   title="Clear filters">
+
+                                    <i class="bi bi-x-lg"></i>
+
+                                </a>
+
+                            }
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- =================================================
+                 PRODUCTS HEADER
+            ================================================== -->
+
+            <div class="products-header">
+
+                <div>
+
+                    <h3>
+                        Your Products
+                    </h3>
+
+                    <span>
+                        @totalProducts product(s) found
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PRODUCTS
+            ================================================== -->
+
+            @if (!products.Any())
+            {
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+
+                        <i class="bi bi-box"></i>
+
+                    </div>
+
+
+                    <h4>
+                        No products found
+                    </h4>
+
+
+                    <p>
+                        There are no products matching your current filters.
+                    </p>
+
+
+                    <a asp-action="Create"
+                       class="add-product-btn">
+
+                        <i class="bi bi-plus-lg"></i>
+
+                        <span>
+                            Add Your First Product
+                        </span>
+
+                    </a>
+
+                </div>
+
+            }
+            else
+            {
+
+                <div class="products-grid">
+
+
+                    @foreach (var product in products)
+                    {
+
+                        var imageUrl =
+                            string.IsNullOrWhiteSpace(product.ImageUrl)
+                                ? placeholder
+                                : Url.Content(
+                                    "~/" +
+                                    product.ImageUrl.TrimStart('/')
+                                  );
+
+
+                        string stockClass;
+                        string stockText;
+
+
+                        if (product.AvailableQuantity <= 0)
+                        {
+                            stockClass = "stock-empty";
+                            stockText = "Out of stock";
+                        }
+                        else if (product.AvailableQuantity <= 5)
+                        {
+                            stockClass = "stock-low";
+                            stockText = "Low stock";
+                        }
+                        else
+                        {
+                            stockClass = "stock-good";
+                            stockText = "In stock";
+                        }
+
+
+                        <article class="product-card">
+
+
+                            <!-- IMAGE -->
+
+                            <div class="product-image">
+
+                                <img src="@imageUrl"
+                                     alt="@product.Name"
+                                     loading="lazy"
+                                     onerror="this.onerror=null;this.src='@placeholder';" />
+
+
+                                <span class="stock-badge @stockClass">
+
+                                    @stockText
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- BODY -->
+
+                            <div class="product-body">
+
+
+                                <div class="product-category">
+
+                                    @(product.Category?.Name ?? "Uncategorized")
+
+                                </div>
+
+
+                                <h3 class="product-name"
+                                    title="@product.Name">
+
+                                    @product.Name
+
+                                </h3>
+
+
+                                <div class="product-meta">
+
+
+                                    <div class="product-price">
+
+                                        EGP @product.Price.ToString("N2")
+
+                                    </div>
+
+
+                                    <div class="product-stock">
+
+                                        @product.AvailableQuantity units
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- ACTIONS -->
+
+                                <div class="product-actions">
+
+
+                                    <a asp-action="Details"
+                                       asp-route-id="@product.Id"
+                                       class="product-action"
+                                       title="View Details"
+                                       aria-label="View Details">
+
+                                        <i class="bi bi-eye"></i>
+
+                                    </a>
+
+
+                                    <a asp-action="Edit"
+                                       asp-route-id="@product.Id"
+                                       class="product-action edit"
+                                       title="Edit Product"
+                                       aria-label="Edit Product">
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </a>
+
+
+                                    <a asp-action="Delete"
+                                       asp-route-id="@product.Id"
+                                       class="product-action delete"
+                                       title="Delete Product"
+                                       aria-label="Delete Product">
+
+                                        <i class="bi bi-trash3"></i>
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </article>
+
+                    }
+
+                </div>
+
+            }
+
+        </div>
+
+    </main>
+
+</div>
+```
+
+</div>
+
+<!-- =========================================================
+     MOBILE SIDEBAR SCRIPT
+========================================================= -->
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const menuButton =
+            document.getElementById("menuButton");
+
+        const sidebar =
+            document.getElementById("sellerSidebar");
+
+        const overlay =
+            document.getElementById("sidebarOverlay");
+
+
+        function openSidebar() {
+
+            if (!sidebar) return;
+
+            sidebar.classList.add("open");
+
+            overlay?.classList.add("show");
+
+            document.body.style.overflow = "hidden";
+        }
+
+
+        function closeSidebar() {
+
+            if (!sidebar) return;
+
+            sidebar.classList.remove("open");
+
+            overlay?.classList.remove("show");
+
+            document.body.style.overflow = "";
+        }
+
+
+        menuButton?.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+                if (sidebar.classList.contains("open")) {
+
+                    closeSidebar();
+
+                }
+                else {
+
+                    openSidebar();
+
+                }
+
+            }
+        );
+
+
+        overlay?.addEventListener(
+            "click",
+            closeSidebar
+        );
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (event.key === "Escape") {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+
+        window.addEventListener(
+            "resize",
+            function () {
+
+                if (window.innerWidth > 900) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
+    });
+
+</script>

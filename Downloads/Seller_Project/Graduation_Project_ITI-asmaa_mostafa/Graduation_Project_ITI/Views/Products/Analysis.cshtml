@@ -1,0 +1,2461 @@
+﻿
+@model Graduation_Project_ITI.Models.SellerAnalysisVM
+
+@{
+    Layout = "~/Views/Shared/_SellerLayout.cshtml";
+
+    ViewData["Title"] = "Analytics";
+
+    string GetStatusClass(string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "pending" => "status-pending",
+            "confirmed" => "status-confirmed",
+            "shipped" => "status-shipped",
+            "delivered" => "status-delivered",
+            "cancelled" => "status-cancelled",
+            _ => "status-default"
+        };
+    }
+
+    var isSalesUp = Model.SalesGrowthPercentage >= 0;
+    var isOrdersUp = Model.OrdersGrowthPercentage >= 0;
+
+    var maxProductSales = Model.TopProducts.Any()
+        ? Model.TopProducts.Max(x => x.Sales)
+        : 0;
+
+    var maxCategorySales = Model.CategorySales.Any()
+        ? Model.CategorySales.Max(x => x.Sales)
+        : 0;
+}
+
+<div class="analytics-page">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <div class="analytics-header">
+
+        <div>
+
+            <div class="analytics-kicker">
+                <i class="bi bi-bar-chart-line-fill"></i>
+                Seller Analytics
+            </div>
+
+            <h1>
+                Business Overview
+            </h1>
+
+            <p>
+                Monitor your sales performance, orders and products.
+            </p>
+
+        </div>
+
+        <div class="header-actions">
+
+             
+            <a asp-action="Index"
+               class="header-btn secondary">
+                <i class="bi bi-box-seam"></i>
+                Products
+            </a>
+
+            <a asp-action="Orders"
+               class="header-btn primary">
+                <i class="bi bi-bag-check"></i>
+                Orders
+            </a>
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- SELLER -->
+    <!-- ================================================= -->
+
+    <div class="seller-profile">
+
+        <div class="seller-avatar">
+            <i class="bi bi-shop"></i>
+        </div>
+
+        <div class="seller-profile-info">
+
+            <span>
+                STORE
+            </span>
+
+            <h3>
+                @Model.SellerName
+            </h3>
+
+        </div>
+
+        <div class="seller-profile-stat">
+
+            <strong>
+                @Model.TotalProducts
+            </strong>
+
+            <span>
+                Products
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- KPI CARDS -->
+    <!-- ================================================= -->
+
+    <div class="kpi-grid">
+
+        <!-- Sales -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-top">
+
+                <div class="kpi-icon sales">
+                    <i class="bi bi-currency-exchange"></i>
+                </div>
+
+                @if (Model.SalesGrowthPercentage != 0)
+                {
+                    <span class="growth @(isSalesUp ? "positive" : "negative")">
+
+                        <i class="bi @(isSalesUp
+                            ? "bi-arrow-up"
+                            : "bi-arrow-down")"></i>
+
+                        @Math.Abs(Model.SalesGrowthPercentage).ToString("0.0")%
+
+                    </span>
+                }
+
+            </div>
+
+            <span class="kpi-label">
+                Total Sales
+            </span>
+
+            <h2>
+                EGP @Model.TotalSales.ToString("N2")
+            </h2>
+
+            <small>
+                Compared with previous 30 days
+            </small>
+
+        </div>
+
+
+        <!-- Orders -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-top">
+
+                <div class="kpi-icon orders">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+
+                @if (Model.OrdersGrowthPercentage != 0)
+                {
+                    <span class="growth @(isOrdersUp ? "positive" : "negative")">
+
+                        <i class="bi @(isOrdersUp
+                            ? "bi-arrow-up"
+                            : "bi-arrow-down")"></i>
+
+                        @Math.Abs(Model.OrdersGrowthPercentage).ToString("0.0")%
+
+                    </span>
+                }
+
+            </div>
+
+            <span class="kpi-label">
+                Total Orders
+            </span>
+
+            <h2>
+                @Model.TotalOrders
+            </h2>
+
+            <small>
+                Orders containing your products
+            </small>
+
+        </div>
+
+
+        <!-- Products Sold -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-top">
+
+                <div class="kpi-icon products">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+
+            </div>
+
+            <span class="kpi-label">
+                Products Sold
+            </span>
+
+            <h2>
+                @Model.TotalProductsSold
+            </h2>
+
+            <small>
+                Total units sold
+            </small>
+
+        </div>
+
+
+        <!-- Average Order -->
+
+        <div class="kpi-card">
+
+            <div class="kpi-top">
+
+                <div class="kpi-icon average">
+                    <i class="bi bi-receipt"></i>
+                </div>
+
+            </div>
+
+            <span class="kpi-label">
+                Average Order
+            </span>
+
+            <h2>
+                EGP @Model.AverageOrderValue.ToString("N2")
+            </h2>
+
+            <small>
+                Average seller order value
+            </small>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- CHART + STATUS -->
+    <!-- ================================================= -->
+
+    <div class="dashboard-grid">
+
+        <!-- SALES TREND -->
+
+        <div class="dashboard-card trend-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        PERFORMANCE
+                    </span>
+
+                    <h3>
+                        Sales & Orders
+                    </h3>
+
+                    <p>
+                        Last 30 days performance
+                    </p>
+
+                </div>
+
+                <div class="trend-icon">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+
+            </div>
+
+            <div class="chart-wrapper">
+                <canvas id="salesTrendChart"></canvas>
+            </div>
+
+        </div>
+
+
+        <!-- ORDER STATUS -->
+
+        <div class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        ORDERS
+                    </span>
+
+                    <h3>
+                        Order Status
+                    </h3>
+
+                    <p>
+                        Current order distribution
+                    </p>
+
+                </div>
+
+                <i class="bi bi-pie-chart-fill card-header-icon"></i>
+
+            </div>
+
+
+            <div class="status-chart-container">
+
+                <div class="status-doughnut">
+
+                    <canvas id="orderStatusChart"></canvas>
+
+                </div>
+
+                <div class="status-legend">
+
+                    <div class="legend-item">
+                        <span class="legend-color pending"></span>
+                        <span>Pending</span>
+                        <strong>@Model.PendingOrders</strong>
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-color confirmed"></span>
+                        <span>Confirmed</span>
+                        <strong>@Model.ConfirmedOrders</strong>
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-color shipped"></span>
+                        <span>Shipped</span>
+                        <strong>@Model.ShippedOrders</strong>
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-color delivered"></span>
+                        <span>Delivered</span>
+                        <strong>@Model.CompletedOrders</strong>
+                    </div>
+
+                    <div class="legend-item">
+                        <span class="legend-color cancelled"></span>
+                        <span>Cancelled</span>
+                        <strong>@Model.CancelledOrders</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- TOP PRODUCTS + RATINGS -->
+    <!-- ================================================= -->
+
+    <div class="dashboard-grid">
+
+        <!-- TOP PRODUCTS -->
+
+        <div class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        PRODUCTS
+                    </span>
+
+                    <h3>
+                        Top 3 Best Sellers
+                    </h3>
+
+                    <p>
+                        Your best performing products
+                    </p>
+
+                </div>
+
+                <i class="bi bi-trophy-fill card-header-icon"></i>
+
+            </div>
+
+
+            @if (!Model.TopProducts.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-box"></i>
+                    <p>No sales data available.</p>
+                </div>
+            }
+            else
+            {
+                <div class="top-products">
+
+                    @{
+                        var rank = 0;
+                    }
+
+                    @foreach (var product in Model.TopProducts)
+                    {
+                        rank++;
+
+                        var percentage = maxProductSales > 0
+                            ? (product.Sales / maxProductSales) * 100
+                            : 0;
+
+                        <div class="top-product">
+
+                            <div class="rank">
+                                @rank
+                            </div>
+
+                            <div class="top-product-image">
+
+                                @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl"
+                                         alt="@product.ProductName"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+
+                                    <div class="image-fallback">
+                                        <i class="bi bi-box"></i>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="image-fallback show">
+                                        <i class="bi bi-box"></i>
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="top-product-info">
+
+                                <strong>
+                                    @product.ProductName
+                                </strong>
+
+                                <span>
+                                    @product.QuantitySold units sold
+                                </span>
+
+                                <div class="mini-progress">
+                                    <div style="width:@percentage.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                </div>
+
+                            </div>
+
+                            <div class="top-product-sales">
+
+                                <strong>
+                                    EGP @product.Sales.ToString("N0")
+                                </strong>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+
+        <!-- RATINGS -->
+
+        <div class="dashboard-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+
+                    <span class="card-label">
+                        CUSTOMER FEEDBACK
+                    </span>
+
+                    <h3>
+                        Product Ratings
+                    </h3>
+
+                    <p>
+                        Customer satisfaction
+                    </p>
+
+                </div>
+
+                <i class="bi bi-star-fill card-header-icon rating-icon"></i>
+
+            </div>
+
+
+            <div class="rating-summary">
+
+                <div class="rating-score">
+
+                    <strong>
+                        @Model.AverageRating.ToString("0.0")
+                    </strong>
+
+                    <div class="stars">
+                        ★★★★★
+                    </div>
+
+                    <span>
+                        @Model.TotalReviews reviews
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            @if (!Model.ProductRatings.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-star"></i>
+                    <p>No product reviews yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="rating-products">
+
+                    @foreach (var product in Model.ProductRatings.Take(4))
+                    {
+                        <div class="rating-product">
+
+                            <div class="rating-product-image">
+
+                                @if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl"
+                                         alt="@product.ProductName" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-box"></i>
+                                }
+
+                            </div>
+
+                            <div class="rating-product-info">
+
+                                <strong>
+                                    @product.ProductName
+                                </strong>
+
+                                <span>
+                                    @product.ReviewCount reviews
+                                </span>
+
+                            </div>
+
+                            <div class="product-rating">
+
+                                <span>
+                                    ★
+                                </span>
+
+                                <strong>
+                                    @product.AverageRating.ToString("0.0")
+                                </strong>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- CATEGORY ANALYTICS -->
+    <!-- ================================================= -->
+
+    <div class="dashboard-card category-card">
+
+        <div class="dashboard-card-header">
+
+            <div>
+
+                <span class="card-label">
+                    CATEGORIES
+                </span>
+
+                <h3>
+                    Sales by Category
+                </h3>
+
+                <p>
+                    Revenue distribution across your categories
+                </p>
+
+            </div>
+
+            <i class="bi bi-bar-chart-fill card-header-icon"></i>
+
+        </div>
+
+
+        <div class="category-layout">
+
+            <div class="category-chart">
+
+                <canvas id="categoryChart"></canvas>
+
+            </div>
+
+
+            <div class="category-list">
+
+                @if (!Model.CategorySales.Any())
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-bar-chart"></i>
+                        <p>No category sales available.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var category in Model.CategorySales)
+                    {
+                        var percentage = maxCategorySales > 0
+                            ? (category.Sales / maxCategorySales) * 100
+                            : 0;
+
+                        <div class="category-row">
+
+                            <div class="category-row-top">
+
+                                <strong>
+                                    @category.CategoryName
+                                </strong>
+
+                                <span>
+                                    EGP @category.Sales.ToString("N0")
+                                </span>
+
+                            </div>
+
+                            <div class="category-progress">
+
+                                <div style="width:@percentage.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%"></div>
+
+                            </div>
+
+                            <small>
+                                @category.QuantitySold units sold
+                            </small>
+
+                        </div>
+                    }
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- RECENT ORDERS -->
+    <!-- ================================================= -->
+
+    <div class="dashboard-card recent-orders">
+
+        <div class="dashboard-card-header">
+
+            <div>
+
+                <span class="card-label">
+                    ORDERS
+                </span>
+
+                <h3>
+                    Recent Orders
+                </h3>
+
+                <p>
+                    Latest orders containing your products
+                </p>
+
+            </div>
+
+            <a asp-action="Orders"
+               class="view-all">
+
+                View All
+
+                <i class="bi bi-arrow-right"></i>
+
+            </a>
+
+        </div>
+
+
+        @if (!Model.RecentOrders.Any())
+        {
+            <div class="empty-state">
+                <i class="bi bi-bag"></i>
+                <p>No orders available.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="analytics-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ORDER</th>
+
+                            <th>CUSTOMER</th>
+
+                            <th>DATE</th>
+
+                            <th>ITEMS</th>
+
+                            <th>TOTAL</th>
+
+                            <th>STATUS</th>
+
+                            <th></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <tr>
+
+                                <td>
+
+                                    <span class="order-id">
+                                        #@order.OrderId.ToString()[..8]
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <strong>
+                                        @order.CustomerName
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="muted">
+                                        @order.OrderDate.ToString("MMM dd, yyyy")
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="item-count">
+                                        @order.ItemsCount
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <strong>
+                                        EGP @order.Total.ToString("N2")
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <span class="status-badge @GetStatusClass(order.Status)">
+
+                                        <span class="status-dot"></span>
+
+                                        @order.Status
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <a asp-action="OrderDetails"
+                                       asp-route-id="@order.OrderId"
+                                       class="details-button">
+
+                                        <i class="bi bi-arrow-up-right"></i>
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- CHART.JS -->
+<!-- ===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<script>
+
+    const trendLabels =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TrendLabels));
+
+    const salesData =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SalesTrend));
+
+    const ordersData =
+        @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrdersTrend));
+
+
+    // =====================================================
+    // SALES & ORDERS CHART
+    // =====================================================
+
+    const salesTrendCanvas =
+        document.getElementById('salesTrendChart');
+
+    if (salesTrendCanvas) {
+
+        new Chart(salesTrendCanvas, {
+
+            type: 'line',
+
+            data: {
+
+                labels: trendLabels,
+
+                datasets: [
+
+                    {
+                        label: 'Sales',
+
+                        data: salesData,
+
+                        borderWidth: 3,
+
+                        tension: 0.4,
+
+                        fill: true,
+
+                        yAxisID: 'salesAxis'
+                    },
+
+                    {
+                        label: 'Orders',
+
+                        data: ordersData,
+
+                        borderWidth: 3,
+
+                        tension: 0.4,
+
+                        fill: false,
+
+                        yAxisID: 'ordersAxis'
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+
+                plugins: {
+
+                    legend: {
+                        position: 'top',
+                        align: 'end'
+                    }
+
+                },
+
+                scales: {
+
+                    salesAxis: {
+
+                        position: 'left',
+
+                        beginAtZero: true,
+
+                        grid: {
+                            color: '#eef1f5'
+                        },
+
+                        ticks: {
+
+                            callback: function(value) {
+                                return 'EGP ' + value;
+                            }
+
+                        }
+
+                    },
+
+                    ordersAxis: {
+
+                        position: 'right',
+
+                        beginAtZero: true,
+
+                        grid: {
+                            drawOnChartArea: false
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================================
+    // ORDER STATUS CHART
+    // =====================================================
+
+    const orderStatusCanvas =
+        document.getElementById('orderStatusChart');
+
+    if (orderStatusCanvas) {
+
+        new Chart(orderStatusCanvas, {
+
+            type: 'doughnut',
+
+            data: {
+
+                labels: [
+                    'Pending',
+                    'Confirmed',
+                    'Shipped',
+                    'Delivered',
+                    'Cancelled'
+                ],
+
+                datasets: [{
+
+                    data: [
+                        @Model.PendingOrders,
+                        @Model.ConfirmedOrders,
+                        @Model.ShippedOrders,
+                        @Model.CompletedOrders,
+                        @Model.CancelledOrders
+                    ],
+
+                    borderWidth: 0,
+
+                    cutout: '72%'
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        display: false
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================================
+    // CATEGORY CHART
+    // =====================================================
+
+    const categoryCanvas =
+        document.getElementById('categoryChart');
+
+    if (categoryCanvas) {
+
+        new Chart(categoryCanvas, {
+
+            type: 'doughnut',
+
+            data: {
+
+                labels: @Html.Raw(
+                    System.Text.Json.JsonSerializer.Serialize(
+                        Model.CategorySales.Select(x => x.CategoryName)
+                    )
+                ),
+
+                datasets: [{
+
+                    data: @Html.Raw(
+                        System.Text.Json.JsonSerializer.Serialize(
+                            Model.CategorySales.Select(x => x.Sales)
+                        )
+                    ),
+
+                    borderWidth: 3,
+
+                    borderColor: '#ffffff',
+
+                    cutout: '65%'
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+                        position: 'bottom'
+                    }
+
+                }
+
+            }
+
+        });
+
+    }
+
+</script>
+
+
+<style>
+
+    /* ================================================= */
+    /* PAGE */
+    /* ================================================= */
+
+    .analytics-page {
+
+        min-height: 100vh;
+
+        padding: 32px;
+
+        background: #f7f8fc;
+
+        color: #172033;
+
+    }
+
+
+    /* ================================================= */
+    /* HEADER */
+    /* ================================================= */
+
+    .analytics-header {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-end;
+
+        margin-bottom: 26px;
+
+    }
+
+    .analytics-kicker {
+
+        color: #6366f1;
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: .12em;
+
+        margin-bottom: 7px;
+
+    }
+
+    .analytics-header h1 {
+
+        margin: 0;
+
+        font-size: 32px;
+
+        font-weight: 850;
+
+    }
+
+    .analytics-header p {
+
+        margin: 7px 0 0;
+
+        color: #8b93a5;
+
+        font-size: 14px;
+
+    }
+
+
+    .header-actions {
+
+        display: flex;
+
+        gap: 10px;
+
+    }
+
+    .header-btn {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 11px 17px;
+
+        border-radius: 11px;
+
+        text-decoration: none;
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+        transition: .2s;
+
+    }
+
+    .header-btn.primary {
+
+        background: #111827;
+
+        color: white;
+
+    }
+
+    .header-btn.secondary {
+
+        background: white;
+
+        color: #374151;
+
+        border: 1px solid #e5e7eb;
+
+    }
+
+
+    /* ================================================= */
+    /* SELLER */
+    /* ================================================= */
+
+    .seller-profile {
+
+        background: white;
+
+        border: 1px solid #e8ebf2;
+
+        border-radius: 18px;
+
+        padding: 18px 22px;
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 15px;
+
+        margin-bottom: 22px;
+
+    }
+
+    .seller-avatar {
+
+        width: 52px;
+
+        height: 52px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 14px;
+
+        background: #eef2ff;
+
+        color: #4f46e5;
+
+        font-size: 23px;
+
+    }
+
+    .seller-profile-info {
+
+        flex: 1;
+
+    }
+
+    .seller-profile-info span {
+
+        font-size: 10px;
+
+        color: #9aa2b1;
+
+        font-weight: 800;
+
+        letter-spacing: .1em;
+
+    }
+
+    .seller-profile-info h3 {
+
+        margin: 3px 0 0;
+
+        font-size: 18px;
+
+        font-weight: 800;
+
+    }
+
+    .seller-profile-stat {
+
+        text-align: right;
+
+        padding-left: 25px;
+
+        border-left: 1px solid #edf0f4;
+
+    }
+
+    .seller-profile-stat strong {
+
+        display: block;
+
+        font-size: 20px;
+
+    }
+
+    .seller-profile-stat span {
+
+        color: #929aaa;
+
+        font-size: 11px;
+
+    }
+
+
+    /* ================================================= */
+    /* KPI */
+    /* ================================================= */
+
+    .kpi-grid {
+
+        display: grid;
+
+        grid-template-columns: repeat(4, 1fr);
+
+        gap: 16px;
+
+        margin-bottom: 20px;
+
+    }
+
+    .kpi-card {
+
+        background: white;
+
+        border: 1px solid #e8ebf2;
+
+        border-radius: 17px;
+
+        padding: 20px;
+
+        transition: .2s;
+
+    }
+
+    .kpi-card:hover {
+
+        transform: translateY(-3px);
+
+        box-shadow: 0 15px 35px rgba(30,41,59,.07);
+
+    }
+
+    .kpi-top {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        margin-bottom: 18px;
+
+    }
+
+    .kpi-icon {
+
+        width: 42px;
+
+        height: 42px;
+
+        border-radius: 12px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 19px;
+
+    }
+
+    .kpi-icon.sales {
+
+        background: #ecfdf5;
+
+        color: #059669;
+
+    }
+
+    .kpi-icon.orders {
+
+        background: #eff6ff;
+
+        color: #2563eb;
+
+    }
+
+    .kpi-icon.products {
+
+        background: #faf5ff;
+
+        color: #9333ea;
+
+    }
+
+    .kpi-icon.average {
+
+        background: #fff7ed;
+
+        color: #ea580c;
+
+    }
+
+    .growth {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 3px;
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        padding: 5px 8px;
+
+        border-radius: 7px;
+
+    }
+
+    .growth.positive {
+
+        color: #047857;
+
+        background: #ecfdf5;
+
+    }
+
+    .growth.negative {
+
+        color: #b91c1c;
+
+        background: #fef2f2;
+
+    }
+
+    .kpi-label {
+
+        color: #8b93a5;
+
+        font-size: 12px;
+
+        display: block;
+
+    }
+
+    .kpi-card h2 {
+
+        margin: 5px 0;
+
+        font-size: 25px;
+
+        font-weight: 850;
+
+    }
+
+    .kpi-card small {
+
+        color: #a1a8b5;
+
+        font-size: 10px;
+
+    }
+
+
+    /* ================================================= */
+    /* DASHBOARD GRID */
+    /* ================================================= */
+
+    .dashboard-grid {
+
+        display: grid;
+
+        grid-template-columns: 1.5fr 1fr;
+
+        gap: 18px;
+
+        margin-bottom: 18px;
+
+    }
+
+    .dashboard-card {
+
+        background: white;
+
+        border: 1px solid #e8ebf2;
+
+        border-radius: 18px;
+
+        padding: 22px;
+
+        min-width: 0;
+
+    }
+
+    .dashboard-card-header {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-start;
+
+        margin-bottom: 20px;
+
+    }
+
+    .card-label {
+
+        color: #a0a7b5;
+
+        font-size: 9px;
+
+        font-weight: 850;
+
+        letter-spacing: .12em;
+
+    }
+
+    .dashboard-card-header h3 {
+
+        margin: 4px 0;
+
+        font-size: 18px;
+
+        font-weight: 850;
+
+    }
+
+    .dashboard-card-header p {
+
+        margin: 0;
+
+        color: #9aa2b1;
+
+        font-size: 11px;
+
+    }
+
+    .card-header-icon {
+
+        color: #6366f1;
+
+        font-size: 20px;
+
+    }
+
+    .rating-icon {
+
+        color: #f59e0b;
+
+    }
+
+    .trend-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+        border-radius: 10px;
+
+        background: #eef2ff;
+
+        color: #6366f1;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+    }
+
+
+    /* ================================================= */
+    /* CHART */
+    /* ================================================= */
+
+    .chart-wrapper {
+
+        height: 300px;
+
+        position: relative;
+
+    }
+
+
+    /* ================================================= */
+    /* STATUS */
+    /* ================================================= */
+
+    .status-chart-container {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 25px;
+
+    }
+
+    .status-doughnut {
+
+        width: 180px;
+
+        height: 180px;
+
+        flex-shrink: 0;
+
+    }
+
+    .status-legend {
+
+        flex: 1;
+
+    }
+
+    .legend-item {
+
+        display: grid;
+
+        grid-template-columns: 10px 1fr auto;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 8px 0;
+
+        font-size: 12px;
+
+    }
+
+    .legend-color {
+
+        width: 8px;
+
+        height: 8px;
+
+        border-radius: 50%;
+
+    }
+
+    .legend-color.pending {
+        background: #f59e0b;
+    }
+
+    .legend-color.confirmed {
+        background: #10b981;
+    }
+
+    .legend-color.shipped {
+        background: #3b82f6;
+    }
+
+    .legend-color.delivered {
+        background: #22c55e;
+    }
+
+    .legend-color.cancelled {
+        background: #ef4444;
+    }
+
+    .legend-item strong {
+        font-weight: 800;
+    }
+
+
+    /* ================================================= */
+    /* TOP PRODUCTS */
+    /* ================================================= */
+
+    .top-product {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        padding: 13px 0;
+
+        border-bottom: 1px solid #f0f2f5;
+
+    }
+
+    .top-product:last-child {
+        border-bottom: 0;
+    }
+
+    .rank {
+
+        width: 25px;
+
+        height: 25px;
+
+        border-radius: 7px;
+
+        background: #f1f5f9;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 11px;
+
+        font-weight: 850;
+
+        color: #64748b;
+
+    }
+
+    .top-product-image {
+
+        width: 46px;
+
+        height: 46px;
+
+        border-radius: 11px;
+
+        overflow: hidden;
+
+        background: #f1f5f9;
+
+        flex-shrink: 0;
+
+    }
+
+    .top-product-image img {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: cover;
+
+    }
+
+    .image-fallback {
+
+        width: 100%;
+
+        height: 100%;
+
+        display: none;
+
+        align-items: center;
+
+        justify-content: center;
+
+        color: #94a3b8;
+
+    }
+
+    .image-fallback.show {
+        display: flex;
+    }
+
+    .top-product-info {
+
+        flex: 1;
+
+        min-width: 0;
+
+    }
+
+    .top-product-info strong {
+
+        display: block;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        font-size: 13px;
+
+    }
+
+    .top-product-info span {
+
+        color: #9aa2b1;
+
+        font-size: 10px;
+
+    }
+
+    .mini-progress {
+
+        height: 4px;
+
+        background: #eef1f5;
+
+        border-radius: 10px;
+
+        margin-top: 6px;
+
+        overflow: hidden;
+
+    }
+
+    .mini-progress div {
+
+        height: 100%;
+
+        background: #6366f1;
+
+        border-radius: inherit;
+
+    }
+
+    .top-product-sales {
+
+        white-space: nowrap;
+
+    }
+
+    .top-product-sales strong {
+
+        font-size: 12px;
+
+    }
+
+
+    /* ================================================= */
+    /* RATINGS */
+    /* ================================================= */
+
+    .rating-summary {
+
+        background: #fffbeb;
+
+        border: 1px solid #fef3c7;
+
+        border-radius: 13px;
+
+        padding: 14px;
+
+        margin-bottom: 12px;
+
+    }
+
+    .rating-score {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+    }
+
+    .rating-score strong {
+
+        font-size: 28px;
+
+        font-weight: 850;
+
+    }
+
+    .stars {
+
+        color: #f59e0b;
+
+        letter-spacing: 2px;
+
+        font-size: 14px;
+
+    }
+
+    .rating-score span {
+
+        color: #9a7b16;
+
+        font-size: 10px;
+
+    }
+
+    .rating-product {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        padding: 9px 0;
+
+        border-bottom: 1px solid #f0f2f5;
+
+    }
+
+    .rating-product:last-child {
+        border-bottom: 0;
+    }
+
+    .rating-product-image {
+
+        width: 36px;
+
+        height: 36px;
+
+        border-radius: 9px;
+
+        background: #f1f5f9;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        overflow: hidden;
+
+        color: #94a3b8;
+
+    }
+
+    .rating-product-image img {
+
+        width: 100%;
+
+        height: 100%;
+
+        object-fit: cover;
+
+    }
+
+    .rating-product-info {
+
+        flex: 1;
+
+        min-width: 0;
+
+    }
+
+    .rating-product-info strong {
+
+        display: block;
+
+        font-size: 12px;
+
+        white-space: nowrap;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+    }
+
+    .rating-product-info span {
+
+        color: #9aa2b1;
+
+        font-size: 9px;
+
+    }
+
+    .product-rating {
+
+        display: flex;
+
+        gap: 3px;
+
+        align-items: center;
+
+        font-size: 12px;
+
+    }
+
+    .product-rating span {
+        color: #f59e0b;
+    }
+
+
+    /* ================================================= */
+    /* CATEGORY */
+    /* ================================================= */
+
+    .category-card {
+        margin-bottom: 18px;
+    }
+
+    .category-layout {
+
+        display: grid;
+
+        grid-template-columns: 300px 1fr;
+
+        gap: 35px;
+
+        align-items: center;
+
+    }
+
+    .category-chart {
+
+        height: 280px;
+
+        position: relative;
+
+    }
+
+    .category-row {
+
+        margin-bottom: 17px;
+
+    }
+
+    .category-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .category-row-top {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        margin-bottom: 6px;
+
+        font-size: 12px;
+
+    }
+
+    .category-row-top span {
+
+        color: #64748b;
+
+        font-weight: 700;
+
+    }
+
+    .category-progress {
+
+        height: 6px;
+
+        background: #eef1f5;
+
+        border-radius: 20px;
+
+        overflow: hidden;
+
+    }
+
+    .category-progress div {
+
+        height: 100%;
+
+        background: #6366f1;
+
+        border-radius: inherit;
+
+    }
+
+    .category-row small {
+
+        color: #a0a7b5;
+
+        font-size: 9px;
+
+    }
+
+
+    /* ================================================= */
+    /* TABLE */
+    /* ================================================= */
+
+    .recent-orders {
+        margin-bottom: 25px;
+    }
+
+    .view-all {
+
+        color: #6366f1;
+
+        text-decoration: none;
+
+        font-size: 12px;
+
+        font-weight: 800;
+
+    }
+
+    .analytics-table {
+
+        width: 100%;
+
+        border-collapse: collapse;
+
+    }
+
+    .analytics-table th {
+
+        color: #9aa2b1;
+
+        font-size: 9px;
+
+        font-weight: 850;
+
+        letter-spacing: .07em;
+
+        text-align: left;
+
+        padding: 11px 12px;
+
+        border-bottom: 1px solid #edf0f4;
+
+    }
+
+    .analytics-table td {
+
+        padding: 14px 12px;
+
+        border-bottom: 1px solid #f1f3f6;
+
+        font-size: 12px;
+
+    }
+
+    .analytics-table tbody tr:hover {
+
+        background: #fafbfc;
+
+    }
+
+    .order-id {
+
+        color: #4f46e5;
+
+        font-weight: 850;
+
+    }
+
+    .muted {
+
+        color: #929aaa;
+
+    }
+
+    .item-count {
+
+        display: inline-flex;
+
+        min-width: 28px;
+
+        height: 25px;
+
+        align-items: center;
+
+        justify-content: center;
+
+        background: #f1f5f9;
+
+        border-radius: 7px;
+
+        font-weight: 800;
+
+    }
+
+
+    /* ================================================= */
+    /* STATUS BADGES */
+    /* ================================================= */
+
+    .status-badge {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 6px 9px;
+
+        border-radius: 20px;
+
+        font-size: 9px;
+
+        font-weight: 800;
+
+    }
+
+    .status-dot {
+
+        width: 5px;
+
+        height: 5px;
+
+        border-radius: 50%;
+
+    }
+
+    .status-pending {
+
+        color: #b45309;
+
+        background: #fff7ed;
+
+    }
+
+    .status-pending .status-dot {
+        background: #f59e0b;
+    }
+
+    .status-confirmed {
+
+        color: #047857;
+
+        background: #ecfdf5;
+
+    }
+
+    .status-confirmed .status-dot {
+        background: #10b981;
+    }
+
+    .status-shipped {
+
+        color: #1d4ed8;
+
+        background: #eff6ff;
+
+    }
+
+    .status-shipped .status-dot {
+        background: #3b82f6;
+    }
+
+    .status-delivered {
+
+        color: #15803d;
+
+        background: #f0fdf4;
+
+    }
+
+    .status-delivered .status-dot {
+        background: #22c55e;
+    }
+
+    .status-cancelled {
+
+        color: #b91c1c;
+
+        background: #fef2f2;
+
+    }
+
+    .status-cancelled .status-dot {
+        background: #ef4444;
+    }
+
+    .status-default {
+
+        color: #475569;
+
+        background: #f1f5f9;
+
+    }
+
+    .status-default .status-dot {
+        background: #94a3b8;
+    }
+
+
+    /* ================================================= */
+    /* DETAILS */
+    /* ================================================= */
+
+    .details-button {
+
+        width: 31px;
+
+        height: 31px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        border-radius: 8px;
+
+        background: #eef2ff;
+
+        color: #6366f1;
+
+        text-decoration: none;
+
+        transition: .2s;
+
+    }
+
+    .details-button:hover {
+
+        background: #6366f1;
+
+        color: white;
+
+    }
+
+
+    /* ================================================= */
+    /* EMPTY */
+    /* ================================================= */
+
+    .empty-state {
+
+        text-align: center;
+
+        padding: 35px 15px;
+
+        color: #a0a7b5;
+
+    }
+
+    .empty-state i {
+
+        display: block;
+
+        font-size: 32px;
+
+        margin-bottom: 8px;
+
+    }
+
+    .empty-state p {
+
+        margin: 0;
+
+        font-size: 12px;
+
+    }
+
+
+    /* ================================================= */
+    /* RESPONSIVE */
+    /* ================================================= */
+
+    @@media (max-width: 1200px) {
+
+        .kpi-grid {
+
+            grid-template-columns: repeat(2, 1fr);
+
+        }
+
+        .dashboard-grid {
+
+            grid-template-columns: 1fr;
+
+        }
+
+    }
+
+
+    @@media (max-width: 850px) {
+
+        .analytics-page {
+
+            padding: 20px 15px;
+
+        }
+
+        .analytics-header {
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            gap: 18px;
+
+        }
+
+        .header-actions {
+
+            width: 100%;
+
+        }
+
+        .header-btn {
+
+            flex: 1;
+
+            justify-content: center;
+
+        }
+
+        .category-layout {
+
+            grid-template-columns: 1fr;
+
+        }
+
+    }
+
+
+    @@media (max-width: 600px) {
+
+        .kpi-grid {
+
+            grid-template-columns: 1fr;
+
+        }
+
+        .seller-profile-stat {
+
+            display: none;
+
+        }
+
+        .status-chart-container {
+
+            flex-direction: column;
+
+        }
+
+        .status-legend {
+
+            width: 100%;
+
+        }
+
+        .analytics-table {
+
+            min-width: 800px;
+
+        }
+
+    }
+
+</style>
+

@@ -1,0 +1,677 @@
+﻿@model Graduation_Project_ITI.Models.RegisterViewModel
+
+@{
+ViewData["Title"] = "Create Account";
+}
+
+<style>
+    .register-page {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+        background: linear-gradient(135deg, #f5f7fb 0%, #eef2f7 100%);
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 1050px;
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.10);
+        display: flex;
+    }
+
+    /* Left Side */
+    .register-info {
+        width: 42%;
+        background: linear-gradient(145deg, #0d6efd, #084298);
+        color: white;
+        padding: 55px 45px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .register-info::before {
+        content: "";
+        position: absolute;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        top: -100px;
+        right: -100px;
+    }
+
+    .register-info::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.06);
+        bottom: -70px;
+        left: -70px;
+    }
+
+    .brand-icon {
+        width: 65px;
+        height: 65px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 25px;
+    }
+
+    .register-info h1 {
+        font-size: 34px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .register-info p {
+        font-size: 16px;
+        line-height: 1.8;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+
+    .feature-list {
+        margin-top: 30px;
+        padding: 0;
+        list-style: none;
+        position: relative;
+        z-index: 1;
+    }
+
+    .feature-list li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+        font-size: 15px;
+    }
+
+    .feature-list i {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+    }
+
+    /* Right Side */
+    .register-form-container {
+        width: 58%;
+        padding: 50px;
+    }
+
+    .form-header {
+        margin-bottom: 30px;
+    }
+
+    .form-header h2 {
+        font-size: 30px;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+
+    .form-header p {
+        color: #6c757d;
+        margin: 0;
+    }
+
+    .input-group-custom {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .input-group-custom .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #8a94a6;
+        z-index: 5;
+    }
+
+    .input-group-custom .form-control {
+        height: 52px;
+        border-radius: 12px;
+        border: 1px solid #dee2e6;
+        padding-left: 45px;
+        transition: all 0.2s ease;
+    }
+
+    .input-group-custom .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.10);
+    }
+
+    .input-label {
+        font-weight: 600;
+        font-size: 14px;
+        color: #343a40;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .role-title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #343a40;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .role-options {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .role-option {
+        flex: 1;
+        position: relative;
+    }
+
+    .role-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .role-label {
+        border: 1px solid #dee2e6;
+        border-radius: 14px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    .role-label:hover {
+        border-color: #0d6efd;
+        background: #f8fbff;
+    }
+
+    .role-option input:checked + .role-label {
+        border-color: #0d6efd;
+        background: #eef5ff;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.08);
+    }
+
+    .role-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: #f1f4f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0d6efd;
+        font-size: 17px;
+    }
+
+    .role-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: #212529;
+    }
+
+    .role-description {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+
+    .register-btn {
+        width: 100%;
+        height: 52px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        box-shadow: 0 7px 18px rgba(13, 110, 253, 0.22);
+    }
+
+    .register-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(13, 110, 253, 0.30);
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 22px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .login-link a {
+        color: #0d6efd;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .validation-message {
+        font-size: 13px;
+        margin-top: 5px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 850px) {
+        .register-card {
+            flex-direction: column;
+        }
+
+        .register-info,
+        .register-form-container {
+            width: 100%;
+        }
+
+        .register-info {
+            padding: 40px 30px;
+        }
+
+        .register-info h1 {
+            font-size: 28px;
+        }
+
+        .feature-list {
+            display: none;
+        }
+
+        .register-form-container {
+            padding: 35px 25px;
+        }
+    }
+
+    @@media (max-width: 500px) {
+        .register-page {
+            padding: 20px 10px;
+        }
+
+        .register-info {
+            padding: 30px 25px;
+        }
+
+        .register-form-container {
+            padding: 30px 20px;
+        }
+
+        .role-options {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+
+<div class="register-page">
+
+
+<div class="register-card">
+
+    <!-- Left Side -->
+    <div class="register-info">
+
+        <div class="brand-icon">
+            <i class="bi bi-shop"></i>
+        </div>
+
+        <h1>Join Our Marketplace</h1>
+
+        <p>
+            Create your account and enjoy a simple,
+            secure and modern shopping experience.
+        </p>
+
+        <ul class="feature-list">
+
+            <li>
+                <i class="bi bi-check-lg"></i>
+                Browse thousands of products
+            </li>
+
+            <li>
+                <i class="bi bi-check-lg"></i>
+                Manage your shopping cart
+            </li>
+
+            <li>
+                <i class="bi bi-check-lg"></i>
+                Track your orders easily
+            </li>
+
+            <li>
+                <i class="bi bi-check-lg"></i>
+                Save your favorite products
+            </li>
+
+        </ul>
+
+    </div>
+
+    <!-- Right Side -->
+    <div class="register-form-container">
+
+        <div class="form-header">
+            <h2>Create Account</h2>
+
+            <p>
+                Fill in your information to get started.
+            </p>
+        </div>
+
+        <form asp-action="Register" method="post">
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger validation-message mb-3">
+            </div>
+
+            <!-- Name -->
+            <div class="input-group-custom">
+
+                <label asp-for="Name"
+                       class="input-label">
+                    Full Name
+                </label>
+
+                <i class="bi bi-person input-icon"></i>
+
+                <input asp-for="Name"
+                       class="form-control"
+                       placeholder="Enter your full name"
+                       autocomplete="name" />
+
+                <span asp-validation-for="Name"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Email -->
+            <div class="input-group-custom">
+
+                <label asp-for="Email"
+                       class="input-label">
+                    Email Address
+                </label>
+
+                <i class="bi bi-envelope input-icon"></i>
+
+                <input asp-for="Email"
+                       class="form-control"
+                       placeholder="example@email.com"
+                       autocomplete="email" />
+
+                <span asp-validation-for="Email"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Phone -->
+            <div class="input-group-custom">
+
+                <label asp-for="PhoneNumber"
+                       class="input-label">
+                    Phone Number
+                </label>
+
+                <i class="bi bi-telephone input-icon"></i>
+
+                <input asp-for="PhoneNumber"
+                       class="form-control"
+                       placeholder="Enter your phone number"
+                       autocomplete="tel" />
+
+                <span asp-validation-for="PhoneNumber"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Password -->
+            <div class="input-group-custom">
+
+                <label asp-for="Password"
+                       class="input-label">
+                    Password
+                </label>
+
+                <i class="bi bi-lock input-icon"></i>
+
+                <input asp-for="Password"
+                       type="password"
+                       class="form-control"
+                       placeholder="Create a strong password"
+                       autocomplete="new-password" />
+
+                <span asp-validation-for="Password"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="input-group-custom">
+
+                <label asp-for="ConfirmPassword"
+                       class="input-label">
+                    Confirm Password
+                </label>
+
+                <i class="bi bi-shield-lock input-icon"></i>
+
+                <input asp-for="ConfirmPassword"
+                       type="password"
+                       class="form-control"
+                       placeholder="Confirm your password"
+                       autocomplete="new-password" />
+
+                <span asp-validation-for="ConfirmPassword"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Role -->
+            <div class="mb-3">
+
+                <span class="role-title">
+                    I want to register as
+                </span>
+
+                <div class="role-options">
+
+                    <div class="role-option">
+
+                        <input asp-for="Role"
+                               type="radio"
+                               value="Customer"
+                               id="customerRole" />
+
+                        <label for="customerRole"
+                               class="role-label">
+
+                            <div class="role-icon">
+                                <i class="bi bi-person"></i>
+                            </div>
+
+                            <div>
+                                <div class="role-name">
+                                    Customer
+                                </div>
+
+                                <div class="role-description">
+                                    Shop & order products
+                                </div>
+                            </div>
+
+                        </label>
+
+                    </div>
+                    
+
+                    <div class="role-option">
+
+                        <input asp-for="Role"
+                               type="radio"
+                               value="Seller"
+                               id="sellerRole" />
+
+                        <label for="sellerRole"
+                               class="role-label">
+
+                            <div class="role-icon">
+                                <i class="bi bi-shop-window"></i>
+                            </div>
+
+                            <div>
+                                <div class="role-name">
+                                    Seller
+                                </div>
+
+                                <div class="role-description">
+                                    Sell your products
+                                </div>
+                            </div>
+
+                        </label>
+                        
+                    </div>
+
+                </div>
+                <div id="shopNameContainer"
+     class="input-group-custom"
+     style="display: none;">
+
+    <label asp-for="ShopName"
+           class="input-label">
+        Shop / Market Name
+    </label>
+
+    <i class="bi bi-shop input-icon"></i>
+
+    <input asp-for="ShopName"
+           class="form-control"
+           placeholder="Enter your shop or market name"
+           autocomplete="organization" />
+
+    <span asp-validation-for="ShopName"
+          class="text-danger validation-message">
+    </span>
+</div>
+                <span asp-validation-for="Role"
+                      class="text-danger validation-message">
+                </span>
+
+            </div>
+
+            <!-- Submit -->
+            <button type="submit"
+                    class="register-btn">
+
+                <i class="bi bi-person-plus me-2"></i>
+                Create Account
+
+            </button>
+
+            <div class="login-link">
+
+                Already have an account?
+
+                <a asp-controller="Account"
+                   asp-action="Login">
+                    Login here
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+@section Scripts {
+@{
+await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const customerRole = document.getElementById("customerRole");
+        const sellerRole = document.getElementById("sellerRole");
+        const shopNameContainer =
+            document.getElementById("shopNameContainer");
+
+        const shopNameInput =
+            document.getElementById("ShopName");
+
+        function toggleShopName() {
+
+            if (sellerRole.checked) {
+
+                shopNameContainer.style.display = "block";
+
+                shopNameInput.setAttribute(
+                    "required",
+                    "required"
+                );
+
+            } else {
+
+                shopNameContainer.style.display = "none";
+
+                shopNameInput.removeAttribute(
+                    "required"
+                );
+
+                shopNameInput.value = "";
+            }
+        }
+
+        customerRole.addEventListener(
+            "change",
+            toggleShopName
+        );
+
+        sellerRole.addEventListener(
+            "change",
+            toggleShopName
+        );
+
+        // Run on page load
+        toggleShopName();
+    });
+</script>
